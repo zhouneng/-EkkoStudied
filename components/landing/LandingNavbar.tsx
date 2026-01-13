@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Icons } from '../Icons';
 
@@ -11,7 +10,7 @@ interface LandingNavbarProps {
 
 export const LandingNavbar: React.FC<LandingNavbarProps> = ({ scrolled, hasKey, onSelectKey, onEnterApp }) => {
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'bg-[#050505]/80 backdrop-blur-md border-b border-white/5 py-2' : 'bg-transparent py-4'}`}>
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'bg-[#050505]/90 backdrop-blur-xl py-2 shadow-2xl shadow-black/50' : 'bg-transparent py-4'}`}>
       <div className="max-w-[1440px] mx-auto px-10 md:px-12 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-amber-500 rounded-lg flex items-center justify-center text-black shadow-[0_0_15px_rgba(249,115,22,0.3)]">

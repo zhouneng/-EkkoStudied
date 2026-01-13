@@ -59,7 +59,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
       if (storedMode === 'official') {
         defaultReasoning = 'gemini-3-flash-preview';
         defaultFast = 'gemini-3-flash-preview';
-        defaultImage = 'imagen-3.0-generate-001';
+        defaultImage = 'gemini-2.5-flash-image';
       }
 
       const r = localStorage.getItem('berryxia_model_reasoning') || defaultReasoning;
@@ -208,7 +208,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
                       // Load specific defaults if switching
                       setReasoningModel('gemini-3-flash-preview');
                       setFastModel('gemini-3-flash-preview');
-                      setImageModel('gemini-3-pro-image-preview');
+                      setImageModel('gemini-2.5-flash-image');
                     }}
                     className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all ${apiMode === 'official'
                       ? 'bg-orange-600 text-white'
@@ -344,4 +344,4 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
       </div>
     </div>
   );
-};
+}

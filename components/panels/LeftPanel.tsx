@@ -61,7 +61,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
   const handleDropFile = (e: React.DragEvent, callback: (base64: string, ratio: string, mime: string) => void) => {
     e.preventDefault();
     e.stopPropagation();
-    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    const files = (Array.from(e.dataTransfer.files) as File[]).filter((f) => f.type.startsWith('image/'));
     if (files.length === 0) return;
     
     const file = files[0];
@@ -253,7 +253,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
 
               if (!displayImage) return;
 
-              const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
+              const files = (Array.from(e.dataTransfer.files) as File[]).filter((f) => f.type.startsWith('image/') || f.type.startsWith('video/'));
               if (files.length === 0) return;
 
               const file = files[0];

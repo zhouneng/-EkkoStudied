@@ -1,7 +1,6 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Icons } from '../Icons';
-import { VALID_USERS, USERNAMES } from './users';
+import { neon, neonConfig } from '@neondatabase/serverless';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -9,114 +8,171 @@ interface LoginModalProps {
   onLoginSuccess: () => void;
 }
 
+// Neon DB Connection
+const databaseUrl = "postgresql://neondb_owner:npg_MxKYSnXD2b8F@ep-fancy-frog-ahrdh5bh.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require";
+
+// Suppress the warning about running SQL from the browser
+neonConfig.disableWarningInBrowsers = true;
+
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [dbStatus, setDbStatus] = useState<'idle' | 'checking' | 'connected' | 'offline'>('idle');
+
+  // 初始化检查 (静默模式)
+  useEffect(() => {
+    if (isOpen) {
+        const init = async () => {
+            setDbStatus('checking');
+            try {
+                const sql = neon(databaseUrl);
+                // 仅做简单的连接存活测试，不打印日志
+                await sql`SELECT 1`;
+                setDbStatus('connected');
+            } catch (e) {
+                // 连接失败静默处理，仅更新 UI 状态小圆点
+                setDbStatus('offline');
+            }
+        };
+        init();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    const cleanUsername = username.trim();
+    const cleanPassword = password.trim();
+
+    if (!cleanUsername || !cleanPassword) {
+      setError("请输入用户名和密码");
+      return;
+    }
+
     setIsLoading(true);
 
-    // Simulate network delay
-    setTimeout(() => {
-      // Validate against preset users
-      if (VALID_USERS[username] && VALID_USERS[username] === password) {
-        onLoginSuccess();
-      } else {
-        setError('用户名或密码错误，请联系开发人员EKKO');
+    try {
+        const sql = neon(databaseUrl);
+        
+        // 1. 查询用户 (静默查询)
+        let users;
+        try {
+            users = await sql`
+                SELECT * FROM "User" 
+                WHERE LOWER(TRIM(username)) = LOWER(${cleanUsername})
+            `;
+        } catch (dbErr: any) {
+            throw new Error("数据库连接异常");
+        }
+        
+        // 2. 验证用户是否存在 (不提示数据库中实际有哪些用户，防止泄露)
+        if (!users || users.length === 0) {
+            throw new Error("账户不存在或用户名错误");
+        }
+
+        const user = users[0];
+
+        // 3. 验证密码
+        if (String(user.password).trim() !== cleanPassword) {
+            throw new Error("密码错误");
+        }
+        
+        // 4. 登录成功
+        localStorage.setItem('unimage_user', user.username);
+        localStorage.setItem('unimage_role', user.role || 'user');
+        
+        setDbStatus('connected');
+        
+        setTimeout(() => {
+            onLoginSuccess();
+        }, 500);
+
+    } catch (err: any) {
+        // 不打印具体错误堆栈到控制台
+        setDbStatus('offline');
+        
+        let msg = err.message || '登录失败';
+        // 模糊化网络错误
+        if (msg.includes('fetch') || msg.includes('network') || msg.includes('Connection')) {
+             msg = '无法连接到数据库，请检查网络';
+        }
+        setError(msg);
+    } finally {
         setIsLoading(false);
-      }
-    }, 1500);
+    }
   };
 
-  const filteredUsers = USERNAMES.filter(u => 
-    u.toLowerCase().includes(username.toLowerCase())
-  );
-
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
       <div 
-        className="w-full max-w-lg bg-[#0A0A0A] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300"
+        className="w-full max-w-[400px] bg-[#0A0A0A] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header - Padding increased to p-10 */}
-        <div className="p-10 pb-8 text-center border-b border-white/5">
-          <div className="w-14 h-14 bg-orange-500/10 rounded-2xl flex items-center justify-center mx-auto mb-5 text-orange-500 border border-orange-500/20">
-            <Icons.Key size={28} />
+        <div className="p-8 pb-6 text-center border-b border-white/5 relative">
+          <div className="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center mx-auto mb-4 text-orange-500 border border-orange-500/20">
+            <Icons.Lock size={24} />
           </div>
-          <h2 className="text-3xl font-serif font-bold text-white mb-2">欢迎回来</h2>
-          <p className="text-stone-400 text-base">请验证身份以访问引擎</p>
+          <h2 className="text-2xl font-serif font-bold text-white mb-2">
+            内部系统登录
+          </h2>
+          <p className="text-stone-500 text-xs">
+            Internal Access Only
+          </p>
+          
+          <div className="absolute top-4 right-4 flex items-center gap-1.5 opacity-50">
+             <div className={`w-1.5 h-1.5 rounded-full ${dbStatus === 'connected' ? 'bg-emerald-500' : dbStatus === 'offline' ? 'bg-red-500' : 'bg-stone-500'}`} />
+          </div>
         </div>
 
-        {/* Form - Padding increased to p-10 */}
-        <form onSubmit={handleLogin} className="p-10 space-y-6">
+        <form onSubmit={handleSubmit} className="p-8 space-y-5">
           {error && (
-            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400 text-sm font-medium animate-in slide-in-from-top-2">
-              <Icons.AlertCircle size={16} />
-              {error}
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex flex-col gap-1 text-red-400 text-xs font-medium animate-in slide-in-from-top-1">
+              <div className="flex items-center gap-2">
+                 <Icons.AlertCircle size={14} className="flex-shrink-0" />
+                 <span className="font-bold">登录失败</span>
+              </div>
+              <span className="opacity-80 leading-relaxed ml-6">{error}</span>
             </div>
           )}
 
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-stone-500 uppercase tracking-widest ml-1">用户名</label>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-widest ml-1">Account</label>
             <div className="relative group">
-              <Icons.User size={18} className="absolute left-4 top-4 text-stone-500 group-focus-within:text-orange-500 transition-colors" />
+              <Icons.User size={16} className="absolute left-4 top-3.5 text-stone-600 group-focus-within:text-orange-500 transition-colors" />
               <input 
                 type="text" 
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                onFocus={() => setShowSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 autoComplete="off"
-                className="w-full bg-[#111] border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-base text-white placeholder-stone-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all"
-                placeholder="请输入用户名"
+                className="w-full bg-[#111] border border-white/10 rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder-stone-700 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all"
+                placeholder="Database Username"
               />
-              
-              {/* Custom Dropdown */}
-              {showSuggestions && filteredUsers.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-[#111] border border-white/10 rounded-xl overflow-hidden z-50 shadow-xl max-h-56 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-1 duration-200">
-                  {filteredUsers.map(user => (
-                    <div
-                      key={user}
-                      onClick={() => {
-                        setUsername(user);
-                        setShowSuggestions(false);
-                      }}
-                      className="p-3.5 text-base text-stone-400 hover:text-white hover:bg-white/5 cursor-pointer transition-colors flex items-center gap-3"
-                    >
-                      <Icons.User size={16} className="opacity-50" />
-                      {user}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-stone-500 uppercase tracking-widest ml-1">密码</label>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-widest ml-1">Password</label>
             <div className="relative group">
-              <Icons.Lock size={18} className="absolute left-4 top-4 text-stone-500 group-focus-within:text-orange-500 transition-colors" />
+              <Icons.Key size={16} className="absolute left-4 top-3.5 text-stone-600 group-focus-within:text-orange-500 transition-colors" />
               <input 
                 type={showPassword ? "text" : "password"} 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#111] border border-white/10 rounded-xl py-3.5 pl-12 pr-12 text-base text-white placeholder-stone-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all"
-                placeholder="请输入密码"
+                className="w-full bg-[#111] border border-white/10 rounded-xl py-3 pl-11 pr-11 text-sm text-white placeholder-stone-700 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all"
+                placeholder="Access Key"
               />
               <button 
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-4 text-stone-500 hover:text-stone-300 transition-colors"
+                className="absolute right-4 top-3.5 text-stone-600 hover:text-stone-400 transition-colors"
               >
-                {showPassword ? <Icons.EyeOff size={18} /> : <Icons.Eye size={18} />}
+                {showPassword ? <Icons.EyeOff size={16} /> : <Icons.Eye size={16} />}
               </button>
             </div>
           </div>
@@ -124,23 +180,28 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
           <button 
             type="submit" 
             disabled={isLoading}
-            className="w-full py-4 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold text-base rounded-xl shadow-lg shadow-orange-900/20 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6"
+            className="w-full py-3.5 font-bold text-sm rounded-xl shadow-lg transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-4 bg-white text-black hover:bg-stone-200"
           >
             {isLoading ? (
               <>
-                <Icons.Loader2 size={20} className="animate-spin" />
-                验证中...
+                <Icons.Loader2 size={16} className="animate-spin" />
+                验证权限中...
               </>
             ) : (
               <>
-                立即登录 <Icons.ArrowRight size={20} />
+                进入引擎
+                <Icons.ArrowRight size={16} />
               </>
             )}
           </button>
           
-          <div className="text-center mt-6">
-             <button type="button" onClick={onClose} className="text-sm text-stone-500 hover:text-stone-300 transition-colors">
-                取消
+          <div className="text-center pt-2">
+             <button 
+                type="button" 
+                onClick={onClose} 
+                className="text-xs text-stone-600 hover:text-stone-400 transition-colors"
+             >
+                取消登录
              </button>
           </div>
         </form>

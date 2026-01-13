@@ -60,12 +60,7 @@ export const PromptStudioView: React.FC<PromptStudioViewProps> = ({
   const [isHistoryDropdownOpen, setIsHistoryDropdownOpen] = useState(false);
   const [isGenerateMenuOpen, setIsGenerateMenuOpen] = useState(false);
   const [generateCount, setGenerateCount] = useState(1);
-  const [isChatDrawerOpen, setIsChatDrawerOpen] = useState(false); // Note: ChatDrawer is in App.tsx, but button to toggle it is here. 
-  // Actually App.tsx manages `isChatDrawerOpen` state. We need to bubble that up via setState or a specific callback.
-  // The `state.isChatDrawerOpen` is in AppState in App.tsx but `isChatDrawerOpen` state variable was local in App.tsx. 
-  // Let's assume passed in `setState` can update it if we move it to AppState, OR we add a prop `setIsChatDrawerOpen`.
-  // Looking at App.tsx, `isChatDrawerOpen` is a local state `const [isChatDrawerOpen, setIsChatDrawerOpen] = useState(false);`
-  // We need a prop for it. I will use a callback prop `onToggleChatDrawer`.
+  const [isChatDrawerOpen, setIsChatDrawerOpen] = useState(false); 
 
   return (
     <div className="flex flex-col h-full bg-stone-50 dark:bg-stone-900 relative transition-colors duration-300">
@@ -198,7 +193,7 @@ export const PromptStudioView: React.FC<PromptStudioViewProps> = ({
             e.stopPropagation();
             setIsDraggingReference(false);
 
-            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            const files = (Array.from(e.dataTransfer.files) as File[]).filter((f) => f.type.startsWith('image/'));
             if (files.length === 0) return;
 
             Promise.all(files.map(file => new Promise<ReferenceImage>((resolve) => {
@@ -259,13 +254,7 @@ export const PromptStudioView: React.FC<PromptStudioViewProps> = ({
                 }));
               }}
               onPreview={(img) => {
-                  // This needs to be handled by parent or passed down callback to open image
-                  // For now, let's assume we can set fullscreen from here if we had the setter, 
-                  // but standard way is to bubble up. 
-                  // Since `setFullscreenImg` is not passed, we might skip preview or add prop.
-                  // Simplification: just omit preview for now or assume parent handles it if we had a dedicated prop.
-                  // Actually, let's add `onPreviewImage` prop to PromptStudioView.
-                  // For this extraction, I'll stub it.
+                  // Stub for preview
               }}
             />
           </div>
@@ -405,11 +394,6 @@ export const PromptStudioView: React.FC<PromptStudioViewProps> = ({
           </button>
           <button
             onClick={() => {
-                // Assuming we can invoke this callback prop
-                // To properly implement this, we need an `onToggleChatDrawer` prop in `PromptStudioViewProps`.
-                // For now, I'll emit a custom event or callback if available. 
-                // Since `onChatSendMessage` opens drawer, let's assume we pass a toggler.
-                // NOTE: In App.tsx integration, pass a handler.
                 (window as any).dispatchEvent(new CustomEvent('toggle-chat-drawer')); 
             }}
             className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all flex-shrink-0 bg-stone-100 text-stone-500 hover:text-stone-900 dark:bg-stone-800 dark:text-stone-500 dark:hover:text-stone-300`}
@@ -505,9 +489,7 @@ export const PromptStudioView: React.FC<PromptStudioViewProps> = ({
       {state.isProcessing && pipelineProgress && (
         <PipelineProgressView
           progress={pipelineProgress}
-          onHide={() => setActiveTab('STUDIO')} // Basically hide by ensuring we are on studio, but actually this overlay sits on top? 
-          // In App.tsx logic, `showProgressView` was a separate state covering the Studio content.
-          // We can handle that by conditionally rendering PipelineProgressView here.
+          onHide={() => setActiveTab('STUDIO')} 
           onCancel={onCancelAnalysis}
         />
       )}

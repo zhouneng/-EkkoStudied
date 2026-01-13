@@ -1,8 +1,8 @@
 
 export const VALID_USERS: Record<string, string> = {
-  'ekko': 'ekko123321',
+  'ekko': 'ekko123',
   'link': 'link123',
-  'admin': 'password'
+  'admin': '123456'
 };
 
 export const USERNAMES = Object.keys(VALID_USERS);
