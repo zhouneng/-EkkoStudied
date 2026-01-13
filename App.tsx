@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ToastContainer, ToastMessage, ToastType } from './components/ToastContainer';
+import React, { useState, useEffect } from 'react';
+import { ToastMessage, ToastType } from './components/ToastContainer';
 import { Icons } from './components/Icons';
 import { executeSmartAnalysis } from './services/geminiService';
 import { soundService } from './services/soundService';
@@ -7,11 +7,9 @@ import { usePipelineProgress } from './hooks/usePipelineProgress';
 import { useAppInit } from './hooks/useAppInit';
 import { useChatSession } from './hooks/useChatSession';
 import { useStudioLogic, INITIAL_STATE } from './hooks/useStudioLogic';
-import { AgentRole, AppState } from './types';
+import { usePanelResizer } from './hooks/usePanelResizer';
+import { AgentRole } from './types';
 import { LandingPage } from './components/LandingPage';
-import { DocumentationModal } from './components/DocumentationModal';
-import { ApiKeyModal } from './components/ApiKeyModal';
-import { PromptLabModal } from './components/PromptLabModal';
 import { ImageZoomState } from './utils/zoom';
 
 // Components
@@ -19,6 +17,7 @@ import { AppHeader } from './components/AppHeader';
 import { HistoryBottomBar } from './components/HistoryBottomBar';
 import { LeftPanel } from './components/panels/LeftPanel';
 import { RightPanel } from './components/panels/RightPanel';
+import { AppOverlays } from './components/AppOverlays';
 
 type TabType = AgentRole.AUDITOR | AgentRole.DESCRIPTOR | AgentRole.ARCHITECT | AgentRole.SYNTHESIZER | AgentRole.SORA_VIDEOGRAPHER | 'STUDIO';
 
@@ -28,7 +27,7 @@ const App: React.FC = () => {
     showLanding, setShowLanding, hasKey, theme, setTheme, apiMode, activeModelName, initialAppState, initialDisplayImage 
   } = useAppInit(INITIAL_STATE);
 
-  // 2. UI State (View-only, not Logic)
+  // 2. UI State
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
@@ -37,24 +36,27 @@ const App: React.FC = () => {
   // UI Preferences
   const [isComparisonMode, setIsComparisonMode] = useState(() => JSON.parse(localStorage.getItem('unimage_comparison_mode') || 'false'));
   const [soundEnabled, setSoundEnabled] = useState(soundService.isEnabled());
-  const [leftPanelWidth, setLeftPanelWidth] = useState(() => parseFloat(localStorage.getItem('unimage_left_panel_width') || '50'));
-  const [rightPanelWidth, setRightPanelWidth] = useState(() => parseInt(localStorage.getItem('unimage_right_panel_width') || '320'));
-  const [isDraggingDivider, setIsDraggingDivider] = useState(false);
-  const [isDraggingRightDivider, setIsDraggingRightDivider] = useState(false);
   const [fullscreenImg, setFullscreenImg] = useState<string | null>(null);
   const [isFullscreenComparison, setIsFullscreenComparison] = useState(false);
   const [imageZoom, setImageZoom] = useState<ImageZoomState>({ scale: 1, panX: 0, panY: 0 });
-  const [showProgressView, setShowProgressView] = useState(false); // Controls the progress overlay visibility
+  const [showProgressView, setShowProgressView] = useState(false);
 
   // Prompt Studio Specific UI State
   const [currentLang, setCurrentLang] = useState<'CN' | 'EN'>('CN');
   const [aiInput, setAiInput] = useState('');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [reverseMode, setReverseMode] = useState<'full' | 'quick'>('quick');
 
-  const mainRef = useRef<HTMLElement>(null);
-
   // 3. Logic Hooks
+  const {
+    leftPanelWidth,
+    rightPanelWidth,
+    isDraggingDivider,
+    isDraggingRightDivider,
+    setIsDraggingDivider,
+    setIsDraggingRightDivider,
+    mainRef
+  } = usePanelResizer();
+
   const pipelineControl = usePipelineProgress();
   
   const showToast = (message: string, type: ToastType = 'info') => {
@@ -69,49 +71,18 @@ const App: React.FC = () => {
 
   const chatSession = useChatSession();
 
-  // 4. Effects for UI Persistence
+  // 4. Effects
   useEffect(() => { localStorage.setItem('unimage_comparison_mode', JSON.stringify(isComparisonMode)); }, [isComparisonMode]);
-  useEffect(() => { localStorage.setItem('unimage_left_panel_width', leftPanelWidth.toString()); }, [leftPanelWidth]);
   useEffect(() => { setImageZoom({ scale: 1, panX: 0, panY: 0 }); }, [displayImage, state.generatedImage]);
 
-  // Divider Drag Handlers
-  useEffect(() => {
-    if (!isDraggingDivider) return;
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!mainRef.current) return;
-      const rect = mainRef.current.getBoundingClientRect();
-      const newWidth = ((e.clientX - rect.left) / rect.width) * 100;
-      setLeftPanelWidth(Math.min(75, Math.max(25, newWidth)));
-    };
-    const handleMouseUp = () => setIsDraggingDivider(false);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    return () => { document.removeEventListener('mousemove', handleMouseMove); document.removeEventListener('mouseup', handleMouseUp); };
-  }, [isDraggingDivider]);
-
-  useEffect(() => {
-    if (!isDraggingRightDivider) return;
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!mainRef.current) return;
-      const rect = mainRef.current.getBoundingClientRect();
-      const newWidth = rect.right - e.clientX;
-      setRightPanelWidth(Math.min(500, Math.max(200, newWidth)));
-      localStorage.setItem('unimage_right_panel_width', newWidth.toString());
-    };
-    const handleMouseUp = () => setIsDraggingRightDivider(false);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    return () => { document.removeEventListener('mousemove', handleMouseMove); document.removeEventListener('mouseup', handleMouseUp); };
-  }, [isDraggingRightDivider]);
-
-  // Global Pipeline Trigger (e.g. from Auditor Tab)
+  // Global Pipeline Trigger
   useEffect(() => {
     if (state.isProcessing && !isPipelineRunning.current && !state.isVideoMode) {
         actions.processImagePipeline(setShowProgressView);
     }
   }, [state.isProcessing]);
 
-  // Add event listener for chat toggle from Studio
+  // Chat toggle event listener
   useEffect(() => {
       const handler = () => chatSession.setIsDrawerOpen(prev => !prev);
       window.addEventListener('toggle-chat-drawer', handler);
@@ -120,29 +91,43 @@ const App: React.FC = () => {
 
   if (showLanding) return <LandingPage onEnterApp={() => setShowLanding(false)} hasKey={hasKey} onSelectKey={() => Promise.resolve(setIsKeyModalOpen(true))} />;
 
+  // Context Object for Prompt Studio
+  const promptStudioContext = {
+    aiInput, setAiInput,
+    isAnalyzing: state.isProcessing, // Using isProcessing as generic analyzing state
+    isChatProcessing: chatSession.isProcessing,
+    reverseMode, setReverseMode,
+    activeModelName,
+    onToggleLanguage: () => actions.handleToggleLanguage(currentLang, setCurrentLang),
+    onGenerateImage: actions.handleGenerateImage,
+    onChatSendMessage: (msg: string) => chatSession.sendMessage(msg, { image: state.image, generatedImage: state.generatedImage, editablePrompt: state.editablePrompt, mimeType: state.mimeType }),
+    onSmartAnalysis: executeSmartAnalysis,
+    onCancelAnalysis: () => { pipelineControl.resetPipeline(); setShowProgressView(false); setState(prev => ({...prev, isProcessing: false})); },
+    onVideoDirectorAnalysis: () => actions.handleVideoDirectorAnalysis(setShowProgressView),
+    onQuickReverse: () => {}, 
+    onStartPipeline: () => setState(prev => ({ ...prev, isProcessing: true }))
+  };
+
   return (
     <div className="min-h-screen bg-stone-50 dark:bg-black text-stone-900 dark:text-stone-200 font-sans selection:bg-stone-200 dark:selection:bg-stone-700 overflow-hidden transition-colors duration-300 animate-in fade-in zoom-in-95 duration-1000">
-      <ToastContainer toasts={toasts} removeToast={removeToast} />
-      <DocumentationModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
-      <ApiKeyModal isOpen={isKeyModalOpen} onClose={() => setIsKeyModalOpen(false)} />
-      <PromptLabModal isOpen={isPromptLabOpen} onClose={() => setIsPromptLabOpen(false)} />
-
-      {/* Fullscreen Overlay */}
-      {fullscreenImg && (
-        <div className="fixed inset-0 z-[200] bg-white/95 dark:bg-black/95 backdrop-blur-md animate-in fade-in duration-300" onClick={() => { setFullscreenImg(null); setIsFullscreenComparison(false); }}>
-          <button onClick={(e) => { e.stopPropagation(); setFullscreenImg(null); setIsFullscreenComparison(false); }} className="absolute top-10 right-10 p-4"><Icons.X size={32} /></button>
-          {isFullscreenComparison ? (
-             <div className="w-full h-full flex items-center justify-center gap-8 p-20">
-               <img src={displayImage || ''} className="max-w-[45%] max-h-[85vh] object-contain" />
-               <img src={`data:image/png;base64,${state.generatedImages[state.selectedHistoryIndex]}`} className="max-w-[45%] max-h-[85vh] object-contain" />
-             </div>
-          ) : (
-             <div className="w-full h-full flex items-center justify-center p-10">
-               <img src={fullscreenImg} className="max-w-[95%] max-h-[95%] object-contain" />
-             </div>
-          )}
-        </div>
-      )}
+      
+      {/* Aggregated Overlays */}
+      <AppOverlays
+        toasts={toasts}
+        removeToast={removeToast}
+        isHelpOpen={isHelpOpen}
+        setIsHelpOpen={setIsHelpOpen}
+        isKeyModalOpen={isKeyModalOpen}
+        setIsKeyModalOpen={setIsKeyModalOpen}
+        isPromptLabOpen={isPromptLabOpen}
+        setIsPromptLabOpen={setIsPromptLabOpen}
+        fullscreenImg={fullscreenImg}
+        setFullscreenImg={setFullscreenImg}
+        isFullscreenComparison={isFullscreenComparison}
+        setIsFullscreenComparison={setIsFullscreenComparison}
+        displayImage={displayImage}
+        generatedImage={state.generatedImages[state.selectedHistoryIndex]}
+      />
 
       {/* Header */}
       <AppHeader
@@ -198,26 +183,14 @@ const App: React.FC = () => {
           setState={setState}
           pipelineProgress={pipelineControl.progress}
           onRegenerateAgent={(role) => {
-              // Simple single-agent regenerate
+              // Simple single-agent regenerate stub
               if(state.image && !state.isProcessing) {
-                  // In a real app, you might want to move this detailed logic to hook too
-                  // For now, assume it works if we trigger processing or specific stream
                   showToast("Use Pipeline for full regen", "info");
               }
           }}
           onStartPipeline={() => setState(prev => ({ ...prev, isProcessing: true }))}
           showToast={showToast}
-          promptStudioProps={{
-            aiInput, setAiInput, isAnalyzing, isChatProcessing: chatSession.isProcessing, reverseMode, setReverseMode, activeModelName,
-            onToggleLanguage: () => actions.handleToggleLanguage(currentLang, setCurrentLang),
-            onGenerateImage: actions.handleGenerateImage,
-            onChatSendMessage: (msg: string) => chatSession.sendMessage(msg, { image: state.image, generatedImage: state.generatedImage, editablePrompt: state.editablePrompt, mimeType: state.mimeType }),
-            onSmartAnalysis: executeSmartAnalysis,
-            onCancelAnalysis: () => { pipelineControl.resetPipeline(); setShowProgressView(false); setState(prev => ({...prev, isProcessing: false})); },
-            onVideoDirectorAnalysis: () => actions.handleVideoDirectorAnalysis(setShowProgressView),
-            onQuickReverse: () => {}, // TODO: Implement quick reverse in useStudioLogic if needed
-            onStartPipeline: () => setState(prev => ({ ...prev, isProcessing: true }))
-          }}
+          promptStudioProps={promptStudioContext}
         />
 
         {/* History Column Overlay */}
