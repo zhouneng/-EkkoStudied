@@ -23,12 +23,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, hasKey, on
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // 修改点：彻底删除 hasKey 判断，强制直接打开登录弹窗
   const handleMainAction = () => {
-    if (hasKey) {
-      setIsLoginOpen(true);
-    } else {
-      onSelectKey();
-    }
+    setIsLoginOpen(true);
   };
 
   return (
