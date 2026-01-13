@@ -39,10 +39,26 @@ export const fileToGenerativePart = async (file: File): Promise<string> => {
 };
 
 export const createGeminiClient = () => {
-    const key = clientConfig.apiKey || process.env.API_KEY; 
+    let key = clientConfig.apiKey;
+    
+    // 1. Priority: Memory Config (already checked above)
+
+    // 2. Priority: LocalStorage (Fallback)
+    if (!key && typeof window !== 'undefined') {
+        const storedKey = localStorage.getItem('GEMINI_API_KEY');
+        if (storedKey) {
+            key = storedKey;
+            clientConfig.apiKey = storedKey; // Update memory config to avoid repeated lookups
+        }
+    }
+
+    // 3. Priority: Environment Variable
+    if (!key) {
+        key = process.env.API_KEY || '';
+    }
     
     if (!key) {
-        console.error("API_KEY is missing from environment variables or configuration");
+        console.error("API_KEY is missing from environment variables, configuration, or localStorage");
         throw new Error("API Key missing");
     }
 

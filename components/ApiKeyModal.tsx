@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Icons } from './Icons';
 import { configureClient, configureModels } from '../services/geminiService';
@@ -36,12 +37,15 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
       const storedMode = (localStorage.getItem('berryxia_api_mode') || 'custom') as 'official' | 'custom';
       setApiMode(storedMode);
 
-      // Load keys from separate storage (with fallback to legacy)
-      const legacyKey = localStorage.getItem('berryxia_api_key') || process.env.GEMINI_API_KEY || '';
+      // Load keys from separate storage (with fallback to legacy and GEMINI_API_KEY)
+      // Use GEMINI_API_KEY as the ultimate fallback for both
+      const universalFallback = localStorage.getItem('GEMINI_API_KEY') || process.env.GEMINI_API_KEY || '';
+      const legacyKey = localStorage.getItem('berryxia_api_key') || universalFallback;
 
       const storedOfficialKey = localStorage.getItem('berryxia_api_key_official') || (storedMode === 'official' ? legacyKey : '');
       const storedCustomKey = localStorage.getItem('berryxia_api_key_custom') || (storedMode === 'custom' ? legacyKey : '');
 
+      // Set initial state
       setOfficialKey(storedOfficialKey);
       setCustomKey(storedCustomKey);
 
@@ -125,9 +129,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
 
   const handleSave = () => {
     if (apiMode === 'custom' && !baseUrl) return;
-    // Note: We allow saving even if one key is empty, as long as the current mode's key is valid? 
-    // Or just save everything.
-
+    
     // Save API mode
     localStorage.setItem('berryxia_api_mode', apiMode);
     localStorage.setItem('berryxia_base_url', baseUrl);
@@ -136,8 +138,11 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
     localStorage.setItem('berryxia_api_key_official', officialKey);
     localStorage.setItem('berryxia_api_key_custom', customKey);
 
-    // Legacy support (optional, but good for safety)
+    // Legacy support
     localStorage.setItem('berryxia_api_key', currentKey);
+    
+    // REQUIRED: Save as GEMINI_API_KEY for createGeminiClient fallback
+    localStorage.setItem('GEMINI_API_KEY', currentKey);
 
     // Save Models
     localStorage.setItem('berryxia_model_reasoning', reasoningModel);
