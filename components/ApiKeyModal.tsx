@@ -17,7 +17,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
   const [customKey, setCustomKey] = useState('');
   const [baseUrl, setBaseUrl] = useState('');
 
-  // Derived current key for display/logic (optional, or just use expression)
+  // Derived current key for display/logic
   const currentKey = apiMode === 'official' ? officialKey : customKey;
   const setApiKey = (val: string) => apiMode === 'official' ? setOfficialKey(val) : setCustomKey(val);
 
@@ -33,26 +33,25 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
 
   useEffect(() => {
     if (isOpen) {
-      // Load API mode
+      // 1. Load API Mode
       const storedMode = (localStorage.getItem('berryxia_api_mode') || 'custom') as 'official' | 'custom';
       setApiMode(storedMode);
 
-      // Load keys from separate storage (with fallback to legacy and GEMINI_API_KEY)
-      // Use GEMINI_API_KEY as the ultimate fallback for both
-      const universalFallback = localStorage.getItem('GEMINI_API_KEY') || process.env.GEMINI_API_KEY || '';
-      const legacyKey = localStorage.getItem('berryxia_api_key') || universalFallback;
-
-      const storedOfficialKey = localStorage.getItem('berryxia_api_key_official') || (storedMode === 'official' ? legacyKey : '');
-      const storedCustomKey = localStorage.getItem('berryxia_api_key_custom') || (storedMode === 'custom' ? legacyKey : '');
-
-      // Set initial state
-      setOfficialKey(storedOfficialKey);
-      setCustomKey(storedCustomKey);
-
+      // 2. Load Base URL
       const storedUrl = localStorage.getItem('berryxia_base_url') || process.env.API_ENDPOINT || 'http://127.0.0.1:8045';
       setBaseUrl(storedUrl);
 
-      // Load Models - different defaults for official vs custom
+      // 3. Load Keys with robust fallback to GEMINI_API_KEY
+      // Priority: Specific storage > GEMINI_API_KEY > Environment
+      const globalKey = localStorage.getItem('GEMINI_API_KEY') || process.env.GEMINI_API_KEY || '';
+      
+      const storedOfficialKey = localStorage.getItem('berryxia_api_key_official') || (storedMode === 'official' ? globalKey : '');
+      const storedCustomKey = localStorage.getItem('berryxia_api_key_custom') || (storedMode === 'custom' ? globalKey : '');
+
+      setOfficialKey(storedOfficialKey || (storedMode === 'official' ? globalKey : ''));
+      setCustomKey(storedCustomKey || (storedMode === 'custom' ? globalKey : ''));
+
+      // 4. Load Models - different defaults for official vs custom
       let defaultReasoning = 'gemini-3-pro-high';
       let defaultFast = 'gemini-3-flash';
       let defaultImage = 'gemini-3-pro-image';
@@ -90,6 +89,9 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
     try {
       let client: GoogleGenAI;
 
+      // Update configuration in memory immediately for the test
+      configureClient(currentKey, baseUrl, apiMode);
+
       if (apiMode === 'official') {
         // Official Google AI API - no custom baseUrl
         client = new GoogleGenAI({
@@ -118,6 +120,14 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
 
       setStatus('success');
       setStatusMsg("连接成功！");
+
+      // CRITICAL: Save to LocalStorage on success immediately
+      localStorage.setItem('GEMINI_API_KEY', currentKey);
+      
+      // Also save specific keys
+      if (apiMode === 'official') localStorage.setItem('berryxia_api_key_official', currentKey);
+      else localStorage.setItem('berryxia_api_key_custom', currentKey);
+
     } catch (e: any) {
       console.error(e);
       setStatus('error');
@@ -138,21 +148,26 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
     localStorage.setItem('berryxia_api_key_official', officialKey);
     localStorage.setItem('berryxia_api_key_custom', customKey);
 
-    // Legacy support
-    localStorage.setItem('berryxia_api_key', currentKey);
-    
-    // REQUIRED: Save as GEMINI_API_KEY for createGeminiClient fallback
-    localStorage.setItem('GEMINI_API_KEY', currentKey);
+    // CRITICAL: Force save the current active key as the global GEMINI_API_KEY
+    const keyToSave = apiMode === 'official' ? officialKey : customKey;
+    if (keyToSave) {
+        localStorage.setItem('GEMINI_API_KEY', keyToSave);
+        // Legacy support
+        localStorage.setItem('berryxia_api_key', keyToSave);
+    }
 
     // Save Models
     localStorage.setItem('berryxia_model_reasoning', reasoningModel);
     localStorage.setItem('berryxia_model_fast', fastModel);
     localStorage.setItem('berryxia_model_image', imageModel);
 
-    configureClient(currentKey, baseUrl, apiMode);
+    // Update Runtime Config (Hot Update)
+    configureClient(keyToSave, baseUrl, apiMode);
     configureModels({ reasoning: reasoningModel, fast: fastModel, image: imageModel });
 
-    window.location.reload(); // Reload to ensure global state freshness
+    // NO RELOAD - Hot update only
+    alert("配置已保存，即时生效！");
+    onClose();
   };
 
   return (
@@ -190,7 +205,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
                   <button
                     onClick={() => {
                       setApiMode('official');
-                      // No longer clearing key here
+                      // Load specific defaults if switching
                       setReasoningModel('gemini-3-flash-preview');
                       setFastModel('gemini-3-flash-preview');
                       setImageModel('gemini-3-pro-image-preview');
@@ -208,7 +223,6 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
                   <button
                     onClick={() => {
                       setApiMode('custom');
-                      // No longer clearing key here
                       setReasoningModel('gemini-3-pro-high');
                       setFastModel('gemini-3-flash');
                       setImageModel('gemini-3-pro-image');
@@ -323,7 +337,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
               className="flex-1 py-2.5 bg-orange-600 text-white hover:bg-orange-500 rounded-xl font-bold text-xs transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"
             >
               <Icons.Save size={14} />
-              Save & Restart
+              Save (保存)
             </button>
           </div>
         </div>
