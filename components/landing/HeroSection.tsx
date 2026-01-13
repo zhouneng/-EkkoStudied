@@ -40,16 +40,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ hasKey, onAction }) =>
           >
             <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-amber-300 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
             <span className="relative flex items-center gap-2 group-hover:text-white transition-colors">
-              {hasKey ? <Icons.Sparkles size={16} /> : <Icons.Key size={16} />}
-              {hasKey ? '开始复刻 (Start Reverse)' : '配置 API Key'}
+              {hasKey ? <Icons.Sparkles size={16} /> : <Icons.ArrowRight size={16} />}
+              {hasKey ? '开始复刻 (Start Reverse)' : '立即登录 (Enter Studio)'}
             </span>
           </button>
-          
-          {!hasKey && (
-             <p className="text-[10px] text-stone-600 animate-pulse">
-                需要配置 Google Gemini API Key
-             </p>
-          )}
         </div>
       </div>
     </section>
