@@ -14,7 +14,9 @@
     "@google/genai": "^1.33.0",
     "lucide-react": "^0.561.0",
     "react-markdown": "^10.1.0",
-    "idb-keyval": "^6.2.2"
+    "idb-keyval": "^6.2.2",
+    "@vitejs/plugin-react": "^5.1.2",
+    "vite": "^7.3.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
