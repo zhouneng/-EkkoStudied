@@ -47,7 +47,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, hasKey, on
 
       {/* 3. Main Content Content */}
       <main className="relative z-10 flex-1 flex flex-col gap-20">
-        <HeroSection hasKey={hasKey} onAction={handleMainAction} />
+        <HeroSection onAction={handleMainAction} />
         <FeatureBento />
       </main>
 

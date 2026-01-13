@@ -3,11 +3,10 @@ import React from 'react';
 import { Icons } from '../Icons';
 
 interface HeroSectionProps {
-  hasKey: boolean;
   onAction: () => void;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ hasKey, onAction }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({ onAction }) => {
   return (
     <section className="relative z-10 flex flex-col justify-center items-center px-6 pt-32 pb-10 min-h-[60vh]">
       <div className="max-w-5xl mx-auto text-center space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-1000">
@@ -40,8 +39,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ hasKey, onAction }) =>
           >
             <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-amber-300 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
             <span className="relative flex items-center gap-2 group-hover:text-white transition-colors">
-              {hasKey ? <Icons.Sparkles size={16} /> : <Icons.ArrowRight size={16} />}
-              {hasKey ? '开始复刻 (Start Reverse)' : '立即登录 (Enter Studio)'}
+              <Icons.ArrowRight size={16} />
+              立即登录 (Enter Studio)
             </span>
           </button>
         </div>
