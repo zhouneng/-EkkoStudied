@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { getHistory } from '../services/historyService';
 import { loadCurrentTask } from '../services/cacheService';
@@ -7,7 +6,7 @@ import { AppState } from '../types';
 export const useAppInit = (INITIAL_STATE: AppState) => {
   const [showLanding, setShowLanding] = useState(true);
   const [hasKey, setHasKey] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [apiMode, setApiMode] = useState<'official' | 'custom'>('custom');
   const [activeModelName, setActiveModelName] = useState('Gemini 2.0 Flash');
   const [initialAppState, setInitialAppState] = useState<Partial<AppState>>({});

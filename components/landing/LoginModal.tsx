@@ -19,6 +19,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
   const [dbStatus, setDbStatus] = useState<'idle' | 'checking' | 'connected' | 'offline'>('idle');
 
@@ -88,10 +89,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
         localStorage.setItem('unimage_role', user.role || 'user');
         
         setDbStatus('connected');
+        setIsSuccess(true); // 触发成功动画状态
         
+        // 延迟跳转，展示过渡动画
         setTimeout(() => {
             onLoginSuccess();
-        }, 500);
+        }, 2000); // 稍微延长一点时间展示动画
 
     } catch (err: any) {
         // 不打印具体错误堆栈到控制台
@@ -103,18 +106,88 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
              msg = '无法连接到数据库，请检查网络';
         }
         setError(msg);
-    } finally {
-        setIsLoading(false);
+        setIsLoading(false); // 只有出错时才取消loading，成功时保持loading状态直到切换
     }
   };
 
+  // 成功过渡动画视图 - Enriched Design
+  if (isSuccess) {
+      return (
+        <div className="fixed inset-0 z-[200] bg-[#000000] flex flex-col items-center justify-center animate-in fade-in duration-500">
+            {/* Background Atmosphere */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-500/5 rounded-full blur-[100px] animate-pulse" />
+                 <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-orange-900/10 to-transparent" />
+            </div>
+
+            <div className="relative z-10 flex flex-col items-center gap-8 animate-in zoom-in-95 slide-in-from-bottom-4 duration-700">
+                {/* Animated Identity Verification Ring */}
+                <div className="relative">
+                    {/* Outer Glow */}
+                    <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-2xl animate-pulse" />
+                    
+                    {/* SVG Circle Progress */}
+                    <div className="relative w-24 h-24">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                            {/* Track */}
+                            <circle 
+                                className="text-stone-800 stroke-current" 
+                                strokeWidth="3" 
+                                cx="50" cy="50" r="46" 
+                                fill="none" 
+                            />
+                            {/* Progress */}
+                            <circle 
+                                className="text-emerald-500 stroke-current" 
+                                strokeWidth="3" 
+                                strokeLinecap="round"
+                                cx="50" cy="50" r="46" 
+                                fill="none" 
+                                strokeDasharray="289" // 2 * pi * 46
+                                strokeDashoffset="289"
+                            >
+                                <animate attributeName="stroke-dashoffset" from="289" to="0" dur="1.2s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1" keyTimes="0;1" />
+                            </circle>
+                        </svg>
+                        
+                        {/* Center Icon */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-20 h-20 bg-[#0A0A0A] rounded-full flex items-center justify-center border border-stone-800 shadow-2xl">
+                                <Icons.ShieldCheck className="w-8 h-8 text-emerald-500 animate-in zoom-in duration-500 delay-300" strokeWidth={2} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="text-center space-y-3">
+                    <h2 className="text-4xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-stone-500 tracking-tight animate-in slide-in-from-bottom-2 fade-in duration-700 delay-200">
+                        Welcome Back
+                    </h2>
+                    
+                    <div className="flex flex-col items-center gap-2 animate-in fade-in duration-700 delay-500">
+                        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-900/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-bold uppercase tracking-widest">
+                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                            <span>Identity Verified</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-stone-600 text-xs font-mono mt-2">
+                             <Icons.Loader2 size={12} className="animate-spin" />
+                             <span>Initializing Visual Engine...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      );
+  }
+
+  // Changed border-white/10 to border-stone-800 to fix "white line" issue
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-300">
       <div 
-        className="w-full max-w-[400px] bg-[#0A0A0A] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300"
+        className="w-full max-w-[400px] bg-[#0A0A0A] border border-stone-800 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-500"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-8 pb-6 text-center border-b border-white/5 relative">
+        <div className="p-8 pb-6 text-center border-b border-stone-800/50 relative">
           <div className="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center mx-auto mb-4 text-orange-500 border border-orange-500/20">
             <Icons.Lock size={24} />
           </div>
@@ -150,7 +223,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 autoComplete="off"
-                className="w-full bg-[#111] border border-white/10 rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder-stone-700 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all"
+                className="w-full bg-[#111] border border-stone-800 rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder-stone-700 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all"
                 placeholder="Database Username"
               />
             </div>
@@ -164,7 +237,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin
                 type={showPassword ? "text" : "password"} 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#111] border border-white/10 rounded-xl py-3 pl-11 pr-11 text-sm text-white placeholder-stone-700 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all"
+                className="w-full bg-[#111] border border-stone-800 rounded-xl py-3 pl-11 pr-11 text-sm text-white placeholder-stone-700 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all"
                 placeholder="Access Key"
               />
               <button 

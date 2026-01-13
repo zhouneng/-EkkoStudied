@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { ToastContainer, ToastMessage, ToastType } from './components/ToastContainer';
 import { Icons } from './components/Icons';
@@ -122,7 +121,7 @@ const App: React.FC = () => {
   if (showLanding) return <LandingPage onEnterApp={() => setShowLanding(false)} hasKey={hasKey} onSelectKey={() => Promise.resolve(setIsKeyModalOpen(true))} />;
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-black text-stone-900 dark:text-stone-200 font-sans selection:bg-stone-200 dark:selection:bg-stone-700 overflow-hidden transition-colors duration-300">
+    <div className="min-h-screen bg-stone-50 dark:bg-black text-stone-900 dark:text-stone-200 font-sans selection:bg-stone-200 dark:selection:bg-stone-700 overflow-hidden transition-colors duration-300 animate-in fade-in zoom-in-95 duration-1000">
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       <DocumentationModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
       <ApiKeyModal isOpen={isKeyModalOpen} onClose={() => setIsKeyModalOpen(false)} />
