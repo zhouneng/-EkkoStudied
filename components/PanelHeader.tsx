@@ -1,9 +1,17 @@
+/**
+ * 文件名: PanelHeader.tsx
+ * 功能: 面板标题栏组件。
+ * 核心逻辑:
+ * 1. 统一面板标题样式。
+ * 2. 支持自定义图标和右侧操作区域 (Children)。
+ */
+
 import React from 'react';
 
 interface PanelHeaderProps {
     title: string;
     icon?: React.ReactNode;
-    children?: React.ReactNode; // For actions or tabs
+    children?: React.ReactNode; // 用于操作按钮或标签页
     className?: string;
 }
 

@@ -1,3 +1,12 @@
+/**
+ * 文件名: PromptLabModal.tsx
+ * 功能: 提示词实验室 (Prompt Lab) 管理组件。
+ * 核心逻辑:
+ * 1. 按 Agent 角色分类管理提示词模板。
+ * 2. 支持创建、复制、编辑、重命名、删除和激活模板版本。
+ * 3. 使用 promptManager 服务进行数据持久化。
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Icons } from './Icons';
 import { AGENTS, SINGLE_STEP_REVERSE_PROMPT } from '../constants';
@@ -26,13 +35,13 @@ export const PromptLabModal: React.FC<PromptLabModalProps> = ({ isOpen, onClose 
     const [isRenaming, setIsRenaming] = useState(false);
     const [renameText, setRenameText] = useState("");
 
-    // Load all versions on open
+    // 打开时加载
     useEffect(() => {
         if (!isOpen) return;
         loadAllVersions();
     }, [isOpen]);
 
-    // Handle ESC key to close modal
+    // 快捷键 ESC 关闭
     useEffect(() => {
         if (!isOpen) return;
         const handleEscape = (e: KeyboardEvent) => {
@@ -53,7 +62,7 @@ export const PromptLabModal: React.FC<PromptLabModalProps> = ({ isOpen, onClose 
             const activeId = promptManager.getActiveVersionId(role);
 
             if (libs.length === 0) {
-                // Initialize defaults
+                // 初始化默认模板
                 const defaults: PromptVersion[] = [];
                 defaults.push({
                     id: Date.now().toString(),
@@ -85,7 +94,7 @@ export const PromptLabModal: React.FC<PromptLabModalProps> = ({ isOpen, onClose 
         setAllVersions(allVers);
         setActiveVersions(actives);
 
-        // Auto-select first active version if nothing selected
+        // 如果未选择，自动选定第一个活跃版本
         if (!currentSelection) {
             const synth = allVers[AgentRole.SYNTHESIZER];
             if (synth && synth.length > 0) {
@@ -193,7 +202,7 @@ export const PromptLabModal: React.FC<PromptLabModalProps> = ({ isOpen, onClose 
                 onClick={(e) => e.stopPropagation()}
             >
 
-                {/* Sidebar: Tree View */}
+                {/* 侧边栏: 树状视图 */}
                 <div className="w-64 bg-stone-50 dark:bg-stone-950 border-r border-stone-200 dark:border-stone-800 flex flex-col overflow-y-auto transition-colors">
                     <div className="p-4 border-b border-stone-200 dark:border-stone-800 font-bold text-stone-500 text-xs uppercase tracking-wider flex items-center gap-2">
                         <Icons.Cpu size={14} /> Prompt Templates
@@ -244,10 +253,10 @@ export const PromptLabModal: React.FC<PromptLabModalProps> = ({ isOpen, onClose 
                     </div>
                 </div>
 
-                {/* Main Content */}
+                {/* 主内容 */}
                 <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-white dark:bg-stone-900 transition-colors">
 
-                    {/* Toolbar */}
+                    {/* 工具栏 */}
                     <div className="p-3 border-b border-stone-200 dark:border-stone-800 flex justify-between items-center bg-stone-50 dark:bg-stone-900">
                         <div className="flex items-center gap-3">
                             {currentVersion && (
@@ -314,7 +323,7 @@ export const PromptLabModal: React.FC<PromptLabModalProps> = ({ isOpen, onClose 
                         </div>
                     </div>
 
-                    {/* Editor */}
+                    {/* 编辑器 */}
                     <div className="flex-1 min-h-0 p-4 bg-stone-50/50 dark:bg-stone-950/50 flex flex-col">
                         {currentVersion ? (
                             <textarea
@@ -330,7 +339,7 @@ export const PromptLabModal: React.FC<PromptLabModalProps> = ({ isOpen, onClose 
                         )}
                     </div>
 
-                    {/* Footer */}
+                    {/* 页脚 */}
                     <div className="p-3 border-t border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 flex justify-between items-center transition-colors">
                         <div className="text-[10px] text-stone-500 dark:text-stone-600">
                             {currentVersion && `Updated: ${new Date(currentVersion.updatedAt).toLocaleString()}`}

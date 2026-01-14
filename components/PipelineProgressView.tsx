@@ -1,3 +1,12 @@
+/**
+ * 文件名: PipelineProgressView.tsx
+ * 功能: 全局流水线进度展示视图。
+ * 核心逻辑:
+ * 1. 显示总体进度条和预计剩余时间。
+ * 2. 渲染详细的步骤卡片列表 (PipelineStepCard)。
+ * 3. 提供 "返回编辑器" (后台运行) 和 "取消" 操作。
+ */
+
 import React from 'react';
 import { Icons } from './Icons';
 import { PipelineProgress } from '../types';
@@ -23,7 +32,7 @@ export const PipelineProgressView: React.FC<PipelineProgressViewProps> = ({
 
   return (
     <div className="absolute inset-0 bg-white/98 dark:bg-stone-900/98 backdrop-blur-md flex flex-col animate-in fade-in duration-300 z-50 transition-colors">
-      {/* Header */}
+      {/* 头部 */}
       <div className="flex-shrink-0 px-6 py-4 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 shadow-sm transition-colors">
         <div className="flex items-center justify-between">
           <div>
@@ -56,7 +65,7 @@ export const PipelineProgressView: React.FC<PipelineProgressViewProps> = ({
           </div>
         </div>
 
-        {/* Overall Progress Bar */}
+        {/* 总体进度条 */}
         <div className="mt-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-stone-500 dark:text-stone-400">
@@ -80,7 +89,7 @@ export const PipelineProgressView: React.FC<PipelineProgressViewProps> = ({
         </div>
       </div>
 
-      {/* Steps List */}
+      {/* 步骤列表 */}
       <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar bg-stone-50 dark:bg-stone-900/50 transition-colors">
         {progress.steps.length > 0 ? (
           progress.steps.map((step, index) => (
@@ -94,7 +103,7 @@ export const PipelineProgressView: React.FC<PipelineProgressViewProps> = ({
         )}
       </div>
 
-      {/* Completion Message */}
+      {/* 完成消息 */}
       {!progress.isRunning && progress.totalProgress === 100 && (
         <div className="flex-shrink-0 p-6 border-t border-stone-200 dark:border-stone-700 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 transition-colors">
           <div className="text-center">

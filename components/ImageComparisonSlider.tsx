@@ -1,3 +1,13 @@
+/**
+ * 文件名: ImageComparisonSlider.tsx
+ * 功能: 图片对比滑块组件。
+ * 核心逻辑:
+ * 1. 提供左右滑动条来对比两张图片 (Before/After)。
+ * 2. 支持并排模式 (Side-by-Side) 和滑块模式，根据容器宽度自动切换。
+ * 3. 支持布局分析覆盖层 (LayoutOverlay) 的显示。
+ * 4. 支持同步缩放和平移。
+ */
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Icons } from './Icons';
 import { LayoutOverlay } from './LayoutOverlay';
@@ -36,11 +46,11 @@ export const ImageComparisonSlider: React.FC<ImageComparisonSliderProps> = ({
   const [containerWidth, setContainerWidth] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Threshold for switching between side-by-side and slider mode
+  // 切换并排模式的阈值
   const SIDE_BY_SIDE_THRESHOLD = 600;
   const useSideBySide = containerWidth >= SIDE_BY_SIDE_THRESHOLD;
 
-  // Monitor container width
+  // 监听容器宽度变化
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -75,7 +85,7 @@ export const ImageComparisonSlider: React.FC<ImageComparisonSliderProps> = ({
     setSliderPosition(percentage);
   };
 
-  // 监听拖拽事件
+  // 注册全局拖拽事件监听
   useEffect(() => {
     if (isDragging) {
       window.addEventListener('mousemove', handleMouseMove);
@@ -100,22 +110,22 @@ export const ImageComparisonSlider: React.FC<ImageComparisonSliderProps> = ({
     const eventOffsetX = e.clientX - rect.left;
     const eventOffsetY = e.clientY - rect.top;
 
-    // Determine the center of the image being zoomed
+    // 确定缩放中心
     let centerX = rect.width / 2;
     const centerY = rect.height / 2;
 
-    // Side-by-side mode adjustment
+    // 并排模式下的中心点调整
     if (useSideBySide) {
       if (eventOffsetX < rect.width / 2) {
-        // Left Image Center is at 25% width
+        // 左侧图片中心
         centerX = rect.width / 4;
       } else {
-        // Right Image Center is at 75% width
+        // 右侧图片中心
         centerX = (rect.width * 3) / 4;
       }
     }
 
-    // Mouse relative to the chosen center
+    // 相对于所选中心的鼠标位置
     const mouseX = eventOffsetX - centerX;
     const mouseY = eventOffsetY - centerY;
 
@@ -130,7 +140,7 @@ export const ImageComparisonSlider: React.FC<ImageComparisonSliderProps> = ({
     }
     : {};
 
-  // Side-by-side mode
+  // 并排模式 (Side-by-Side)
   if (useSideBySide) {
     return (
       <div
@@ -168,7 +178,7 @@ export const ImageComparisonSlider: React.FC<ImageComparisonSliderProps> = ({
           </div>
         </div>
 
-        {/* Zoom indicator */}
+        {/* 缩放指示器 */}
         {zoom.scale > 1 && (
           <div className="absolute bottom-3 left-3 px-2 py-1 bg-black/60 backdrop-blur rounded-lg text-[10px] font-bold text-white z-30">
             {Math.round(zoom.scale * 100)}%
@@ -177,7 +187,7 @@ export const ImageComparisonSlider: React.FC<ImageComparisonSliderProps> = ({
 
         {layoutData && <LayoutOverlay data={layoutData} show={true} />}
 
-        {/* Fullscreen button */}
+        {/* 全屏按钮 */}
         <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20" style={{ right: '50%', transform: 'translateX(50%)' }}>
           {onFullscreen && (
             <button
@@ -206,7 +216,7 @@ export const ImageComparisonSlider: React.FC<ImageComparisonSliderProps> = ({
     );
   }
 
-  // Slider mode (narrow container)
+  // 滑块模式 (Slider mode)
   return (
     <div
       ref={containerRef}
@@ -243,7 +253,7 @@ export const ImageComparisonSlider: React.FC<ImageComparisonSliderProps> = ({
         <span className="text-[10px] font-medium uppercase tracking-wider leading-none pt-[1px]">{afterLabel}</span>
       </div>
 
-      {/* Zoom indicator */}
+      {/* 缩放指示器 */}
       {
         zoom.scale > 1 && (
           <div className="absolute bottom-3 left-3 px-2 py-1 bg-black/60 backdrop-blur rounded-lg text-[10px] font-bold text-white z-30">

@@ -1,3 +1,12 @@
+/**
+ * 文件名: ImageViewer.tsx
+ * 功能: 图像查看器组件。
+ * 核心逻辑:
+ * 1. 显示单张图片，支持缩放和平移操作。
+ * 2. 渲染布局分析覆盖层 (LayoutOverlay)。
+ * 3. 提供全屏查看和切换 "蓝图模式" 的按钮。
+ */
+
 import React, { useRef, useState, useEffect } from 'react';
 import { Icons } from './Icons';
 import { LayoutOverlay } from './LayoutOverlay';
@@ -68,14 +77,14 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
 
       {layoutData && <LayoutOverlay data={layoutData} show={true} />}
 
-      {/* Zoom indicator */}
+      {/* 缩放指示器 */}
       {zoom.scale > 1 && (
         <div className="absolute top-3 left-3 px-2 py-1 bg-black/60 backdrop-blur rounded-lg text-[10px] font-bold text-white">
           {Math.round(zoom.scale * 100)}%
         </div>
       )}
 
-      {/* 浮动工具栏：全屏按钮修复 */}
+      {/* 全屏按钮 */}
       <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
         {onFullscreen && (
           <button

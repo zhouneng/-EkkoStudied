@@ -1,3 +1,11 @@
+/**
+ * 文件名: constants.ts
+ * 功能: 全局常量配置。
+ * 核心逻辑:
+ * 1. 定义所有 Agent 的系统指令 (System Instructions) 和元数据。
+ * 2. 定义流水线执行顺序 (PIPELINE_ORDER)。
+ * 3. 定义预设的 Prompt 模板。
+ */
 
 import { AgentConfig, AgentRole } from './types';
 

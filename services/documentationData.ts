@@ -1,4 +1,12 @@
-import { Icons } from '../components/Icons';
+/**
+ * 文件名: documentationData.ts
+ * 功能: 静态文档数据源。
+ * 核心逻辑:
+ * 1. 定义文档中心 (Documentation Center) 的分类结构。
+ * 2. 存储各章节的 Markdown 内容。
+ */
+
+import { Icons } from '../components/common/Icons';
 
 export interface DocArticle {
     id: string;
@@ -25,8 +33,8 @@ export const DOCUMENTATION_CATEGORIES: DocCategory[] = [
             {
                 id: 'concepts',
                 title: 'Core Concepts',
-                icon: 'Zap', // Mapping to Icons.Sparkles or similar if Zap not in Icons. Using Sparkles as fallback mentally or assume Zap added. 
-                // Actually Icons.tsx doesn't have Zap. Let's use Sparkles.
+                icon: 'Zap', // 映射到 Icons.Sparkles 或类似的图标，如果 Icons 中没有 Zap。此处假设 Zap 已添加。
+                // 实际上 Icons.tsx 没有 Zap。我们将使用 Sparkles。
                 content: `# Core Concepts\n\nUnImage uses a multi-agent system to deconstruct images.`
             }
         ]

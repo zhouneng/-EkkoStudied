@@ -1,6 +1,15 @@
+/**
+ * 文件名: App.tsx
+ * 功能: 应用程序主入口组件。
+ * 核心逻辑:
+ * 1. 组合布局组件 (Header, Panels, BottomBar)。
+ * 2. 初始化全局状态和上下文。
+ * 3. 管理全屏覆盖层和弹窗。
+ */
+
 import React, { useState, useEffect } from 'react';
-import { ToastMessage, ToastType } from './components/ToastContainer';
-import { Icons } from './components/Icons';
+import { ToastMessage, ToastType } from './components/common/ToastContainer';
+import { Icons } from './components/common/Icons';
 import { executeSmartAnalysis } from './services/geminiService';
 import { soundService } from './services/soundService';
 import { usePipelineProgress } from './hooks/usePipelineProgress';
@@ -9,31 +18,31 @@ import { useChatSession } from './hooks/useChatSession';
 import { useStudioLogic, INITIAL_STATE } from './hooks/useStudioLogic';
 import { usePanelResizer } from './hooks/usePanelResizer';
 import { AgentRole } from './types';
-import { LandingPage } from './components/LandingPage';
+import { LandingPage } from './components/features/landing/LandingPage';
 import { ImageZoomState } from './utils/zoom';
 
-// Components
-import { AppHeader } from './components/AppHeader';
-import { HistoryBottomBar } from './components/HistoryBottomBar';
-import { LeftPanel } from './components/panels/LeftPanel';
-import { RightPanel } from './components/panels/RightPanel';
-import { AppOverlays } from './components/AppOverlays';
+// 组件
+import { AppHeader } from './components/layout/AppHeader';
+import { HistoryBottomBar } from './components/layout/HistoryBottomBar';
+import { LeftPanel } from './components/features/studio/LeftPanel';
+import { RightPanel } from './components/features/studio/RightPanel';
+import { AppOverlays } from './components/common/AppOverlays';
 
 type TabType = AgentRole.AUDITOR | AgentRole.DESCRIPTOR | AgentRole.ARCHITECT | AgentRole.SYNTHESIZER | AgentRole.SORA_VIDEOGRAPHER | 'STUDIO';
 
 const App: React.FC = () => {
-  // 1. Initialization
+  // 1. 初始化
   const { 
     showLanding, setShowLanding, hasKey, theme, setTheme, apiMode, activeModelName, initialAppState, initialDisplayImage 
   } = useAppInit(INITIAL_STATE);
 
-  // 2. UI State
+  // 2. UI 状态
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
   const [isPromptLabOpen, setIsPromptLabOpen] = useState(false);
   
-  // UI Preferences
+  // UI 偏好设置
   const [isComparisonMode, setIsComparisonMode] = useState(() => JSON.parse(localStorage.getItem('unimage_comparison_mode') || 'false'));
   const [soundEnabled, setSoundEnabled] = useState(soundService.isEnabled());
   const [fullscreenImg, setFullscreenImg] = useState<string | null>(null);
@@ -41,12 +50,12 @@ const App: React.FC = () => {
   const [imageZoom, setImageZoom] = useState<ImageZoomState>({ scale: 1, panX: 0, panY: 0 });
   const [showProgressView, setShowProgressView] = useState(false);
 
-  // Prompt Studio Specific UI State
+  // 提示词工作室特定 UI 状态
   const [currentLang, setCurrentLang] = useState<'CN' | 'EN'>('CN');
   const [aiInput, setAiInput] = useState('');
   const [reverseMode, setReverseMode] = useState<'full' | 'quick'>('quick');
 
-  // 3. Logic Hooks
+  // 3. 逻辑 Hooks
   const {
     leftPanelWidth,
     rightPanelWidth,
@@ -71,18 +80,18 @@ const App: React.FC = () => {
 
   const chatSession = useChatSession();
 
-  // 4. Effects
+  // 4. 副作用
   useEffect(() => { localStorage.setItem('unimage_comparison_mode', JSON.stringify(isComparisonMode)); }, [isComparisonMode]);
   useEffect(() => { setImageZoom({ scale: 1, panX: 0, panY: 0 }); }, [displayImage, state.generatedImage]);
 
-  // Global Pipeline Trigger
+  // 全局流水线触发器
   useEffect(() => {
     if (state.isProcessing && !isPipelineRunning.current && !state.isVideoMode) {
         actions.processImagePipeline(setShowProgressView);
     }
   }, [state.isProcessing]);
 
-  // Chat toggle event listener
+  // 聊天切换事件监听器
   useEffect(() => {
       const handler = () => chatSession.setIsDrawerOpen(prev => !prev);
       window.addEventListener('toggle-chat-drawer', handler);
@@ -91,10 +100,10 @@ const App: React.FC = () => {
 
   if (showLanding) return <LandingPage onEnterApp={() => setShowLanding(false)} hasKey={hasKey} onSelectKey={() => Promise.resolve(setIsKeyModalOpen(true))} />;
 
-  // Context Object for Prompt Studio
+  // 提示词工作室上下文对象
   const promptStudioContext = {
     aiInput, setAiInput,
-    isAnalyzing: state.isProcessing, // Using isProcessing as generic analyzing state
+    isAnalyzing: state.isProcessing, // 使用 isProcessing 作为通用分析状态
     isChatProcessing: chatSession.isProcessing,
     reverseMode, setReverseMode,
     activeModelName,
@@ -111,7 +120,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-stone-50 dark:bg-black text-stone-900 dark:text-stone-200 font-sans selection:bg-stone-200 dark:selection:bg-stone-700 overflow-hidden transition-colors duration-300 animate-in fade-in zoom-in-95 duration-1000">
       
-      {/* Aggregated Overlays */}
+      {/* 聚合覆盖层 */}
       <AppOverlays
         toasts={toasts}
         removeToast={removeToast}
@@ -129,7 +138,7 @@ const App: React.FC = () => {
         generatedImage={state.generatedImages[state.selectedHistoryIndex]}
       />
 
-      {/* Header */}
+      {/* 头部 */}
       <AppHeader
         pipelineProgress={pipelineControl.progress}
         setIsPromptLabOpen={setIsPromptLabOpen}
@@ -147,7 +156,7 @@ const App: React.FC = () => {
 
       <main ref={mainRef} className={`fixed top-24 bottom-28 left-8 right-8 max-w-[1920px] mx-auto flex gap-0 z-0 ${(isDraggingDivider || isDraggingRightDivider) ? 'select-none' : ''}`}>
         
-        {/* Left Panel */}
+        {/* 左侧面板 */}
         <LeftPanel
           width={leftPanelWidth}
           state={state}
@@ -166,7 +175,7 @@ const App: React.FC = () => {
           showToast={showToast}
         />
 
-        {/* Divider */}
+        {/* 分隔线 */}
         <div
           onMouseDown={() => setIsDraggingDivider(true)}
           className={`w-2 cursor-col-resize flex items-center justify-center group hover:bg-stone-200 dark:hover:bg-stone-700/50 transition-colors ${isDraggingDivider ? 'bg-orange-500/30' : ''}`}
@@ -174,7 +183,7 @@ const App: React.FC = () => {
           <div className={`w-0.5 h-12 rounded-full transition-colors ${isDraggingDivider ? 'bg-orange-500' : 'bg-stone-300 dark:bg-stone-700 group-hover:bg-stone-400 dark:group-hover:bg-stone-500'}`} />
         </div>
 
-        {/* Right Panel (Workbench) */}
+        {/* 右侧面板 */}
         <RightPanel
           width={100 - leftPanelWidth}
           activeTab={activeTab}
@@ -183,7 +192,7 @@ const App: React.FC = () => {
           setState={setState}
           pipelineProgress={pipelineControl.progress}
           onRegenerateAgent={(role) => {
-              // Simple single-agent regenerate stub
+              // 简单的单个 Agent 重新生成存根
               if(state.image && !state.isProcessing) {
                   showToast("Use Pipeline for full regen", "info");
               }
@@ -193,7 +202,7 @@ const App: React.FC = () => {
           promptStudioProps={promptStudioContext}
         />
 
-        {/* History Column Overlay */}
+        {/* 历史记录列覆盖层 */}
         {state.isHistoryOpen && (
            <>
              <div onMouseDown={() => setIsDraggingRightDivider(true)} className="w-2 cursor-col-resize flex items-center justify-center group hover:bg-stone-200"><div className="w-0.5 h-12 bg-stone-300 rounded-full" /></div>
@@ -211,7 +220,7 @@ const App: React.FC = () => {
            </>
         )}
 
-        {/* Chat Drawer Overlay */}
+        {/* 聊天抽屉覆盖层 */}
         {chatSession.isDrawerOpen && (
             <div style={{ width: rightPanelWidth }} className="flex-shrink-0 flex flex-col bg-white dark:bg-stone-900 border rounded-xl ml-2">
                  <div className="p-4 border-b flex justify-between"><h3 className="font-bold">AI Assistant</h3><button onClick={()=>chatSession.setIsDrawerOpen(false)}><Icons.X size={14}/></button></div>
@@ -223,7 +232,7 @@ const App: React.FC = () => {
 
       </main>
 
-      {/* Bottom Bar */}
+      {/* 底部栏 */}
       <HistoryBottomBar
         generatedImages={state.generatedImages}
         selectedHistoryIndex={state.selectedHistoryIndex}

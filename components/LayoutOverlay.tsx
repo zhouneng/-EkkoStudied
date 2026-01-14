@@ -1,3 +1,12 @@
+/**
+ * 文件名: LayoutOverlay.tsx
+ * 功能: 布局分析覆盖层组件。
+ * 核心逻辑:
+ * 1. 接收布局元素数据 (LayoutElement[])。
+ * 2. 根据坐标绘制半透明的边界框 (Bounding Boxes) 叠加在图片上。
+ * 3. 不同的层级 (Primary/Secondary) 使用不同的颜色高亮。
+ */
+
 import React, { useEffect, useState } from 'react';
 import { LayoutElement } from '../types';
 

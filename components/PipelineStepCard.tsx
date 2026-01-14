@@ -1,3 +1,12 @@
+/**
+ * 文件名: PipelineStepCard.tsx
+ * 功能: 流水线单步骤卡片组件。
+ * 核心逻辑:
+ * 1. 显示步骤名称、描述和状态图标 (Running/Completed/Error)。
+ * 2. 渲染流式内容 (打字机效果) 或最终结果。
+ * 3. 支持折叠/展开详细内容。
+ */
+
 import React, { useState } from 'react';
 import { Icons } from './Icons';
 import { PipelineStep, PipelineStepStatus } from '../types';
@@ -42,7 +51,7 @@ export const PipelineStepCard: React.FC<PipelineStepCardProps> = ({ step, index 
 
   return (
     <div className={`rounded-xl border transition-all ${getStatusColor()}`}>
-      {/* Header */}
+      {/* 头部 */}
       <div className="p-4 flex items-start justify-between">
         <div className="flex items-start gap-3 flex-1">
           <div className="mt-0.5">{getStatusIcon()}</div>
@@ -61,7 +70,7 @@ export const PipelineStepCard: React.FC<PipelineStepCardProps> = ({ step, index 
           </div>
         </div>
 
-        {/* Progress Bar for Running Step */}
+        {/* 运行时的进度条 */}
         {step.status === PipelineStepStatus.RUNNING && (
           <div className="w-24 h-2 bg-blue-100 dark:bg-blue-900/30 rounded-full overflow-hidden ml-3">
             <div
@@ -72,7 +81,7 @@ export const PipelineStepCard: React.FC<PipelineStepCardProps> = ({ step, index 
         )}
       </div>
 
-      {/* Content Area */}
+      {/* 内容区域 */}
       {content && (
         <div className="px-4 pb-4">
           <div className={`relative ${isExpanded ? '' : 'max-h-20 overflow-hidden'}`}>
@@ -114,7 +123,7 @@ export const PipelineStepCard: React.FC<PipelineStepCardProps> = ({ step, index 
         </div>
       )}
 
-      {/* Error Message */}
+      {/* 错误消息 */}
       {step.error && (
         <div className="px-4 pb-4">
           <div className="bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800/50 rounded-lg p-3 text-xs text-rose-600 dark:text-rose-400">

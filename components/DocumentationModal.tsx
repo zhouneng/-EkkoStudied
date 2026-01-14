@@ -1,3 +1,12 @@
+/**
+ * 文件名: DocumentationModal.tsx
+ * 功能: 文档中心模态框组件。
+ * 核心逻辑:
+ * 1. 提供分章节的文档导航。
+ * 2. 渲染文档的 Markdown 内容。
+ * 3. 默认显示 "快速开始" 页面。
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Icons } from './Icons';
 import ReactMarkdown from 'react-markdown';
@@ -11,7 +20,7 @@ interface DocumentationModalProps {
 export const DocumentationModal: React.FC<DocumentationModalProps> = ({ isOpen, onClose }) => {
   const [activeArticleId, setActiveArticleId] = useState<string>('quick-start');
 
-  // Reset to quick start when opened
+  // 打开时重置为快速开始
   useEffect(() => {
     if (isOpen) {
       setActiveArticleId('quick-start');
@@ -20,7 +29,7 @@ export const DocumentationModal: React.FC<DocumentationModalProps> = ({ isOpen, 
 
   if (!isOpen) return null;
 
-  // Helpers to find content
+  // 查找当前文章内容
   const currentArticle = DOCUMENTATION_CATEGORIES
     .flatMap(c => c.articles)
     .find(a => a.id === activeArticleId);
@@ -51,7 +60,7 @@ export const DocumentationModal: React.FC<DocumentationModalProps> = ({ isOpen, 
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
       <div className="bg-white dark:bg-stone-900 rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden border border-stone-200 dark:border-stone-800 flex h-[85vh] transition-colors" onClick={e => e.stopPropagation()}>
 
-        {/* Sidebar */}
+        {/* 侧边栏 */}
         <div className="w-64 bg-stone-50 dark:bg-stone-900/50 border-r border-stone-200 dark:border-stone-800 flex flex-col shrink-0 transition-colors">
           <div className="p-6 border-b border-stone-200 dark:border-stone-800">
             <h3 className="font-bold text-stone-800 dark:text-stone-200 flex items-center gap-2">
@@ -81,9 +90,9 @@ export const DocumentationModal: React.FC<DocumentationModalProps> = ({ isOpen, 
           </div>
         </div>
 
-        {/* Content Area */}
+        {/* 内容区域 */}
         <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-stone-950 transition-colors">
-          {/* Header */}
+          {/* 头部 */}
           <div className="h-16 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between px-8 bg-white/80 dark:bg-stone-950/80 backdrop-blur transition-colors">
             <h2 className="text-lg font-bold text-stone-800 dark:text-stone-200 flex items-center gap-3">
               {currentArticle?.title}
@@ -93,7 +102,7 @@ export const DocumentationModal: React.FC<DocumentationModalProps> = ({ isOpen, 
             </button>
           </div>
 
-          {/* Markdown Content */}
+          {/* Markdown 内容 */}
           <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
             <div className="max-w-3xl mx-auto pb-20">
               <div className="prose prose-stone dark:prose-invert 

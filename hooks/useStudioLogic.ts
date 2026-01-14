@@ -1,3 +1,12 @@
+/**
+ * 文件名: useStudioLogic.ts
+ * 功能: 工作台核心业务逻辑 Hook，负责处理图像处理流水线、状态同步及后端交互。
+ * 核心逻辑:
+ * 1. 管理应用核心状态 (AppState)。
+ * 2. 处理文件上传、历史记录加载和删除。
+ * 3. 执行视频导演分析 (handleVideoDirectorAnalysis) 和标准图像流水线 (processImagePipeline)。
+ * 4. 触发图像生成和语言翻译功能。
+ */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { AppState, AgentRole, PipelineStepStatus, HistoryItem } from '../types';
@@ -21,7 +30,7 @@ const INITIAL_RESULTS = {
   [AgentRole.SORA_VIDEOGRAPHER]: { role: AgentRole.SORA_VIDEOGRAPHER, content: '', isStreaming: false, isComplete: false },
 };
 
-// Initial state constant
+// 初始状态常量
 export const INITIAL_STATE: AppState = {
   image: null, mimeType: '', isProcessing: false, activeRole: null, results: INITIAL_RESULTS,
   isFusionMode: false, productImage: null, productMimeType: '', isVideoMode: false,
@@ -49,15 +58,15 @@ export const useStudioLogic = (
     },
     showToast: (msg: string, type: 'info' | 'success' | 'error') => void
 ) => {
-    // Core State
+    // 核心状态
     const [state, setState] = useState<AppState>(INITIAL_STATE);
     const [displayImage, setDisplayImage] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<TabType>('STUDIO');
     
-    // Internal Refs
+    // 内部引用
     const isPipelineRunning = useRef(false);
 
-    // Initialization Effect
+    // 初始化副作用
     useEffect(() => {
         if (Object.keys(initialAppState).length > 0) {
             setState(prev => ({ ...prev, ...initialAppState }));
@@ -67,12 +76,12 @@ export const useStudioLogic = (
         }
     }, [initialAppState, initialDisplayImage]);
 
-    // Auto-save Effect
+    // 自动保存副作用
     useEffect(() => {
         if (state.image) {
             try {
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const { history, ...rest } = state; // Don't cache history array
+                const { history, ...rest } = state; // 不缓存历史记录数组以避免重复存储
                 saveCurrentTask(rest);
             } catch (e: any) {
                 if (e.name === 'QuotaExceededError') showToast('本地存储已满', 'error');
@@ -80,7 +89,7 @@ export const useStudioLogic = (
         }
     }, [state]);
 
-    // --- Actions ---
+    // --- 动作 ---
 
     const handleFileSelected = useCallback((base64Data: string, aspectRatio: string, mimeType: string, duration?: number) => {
         setDisplayImage(`data:${mimeType};base64,${base64Data}`);
@@ -148,7 +157,7 @@ export const useStudioLogic = (
                 content += chunk;
                 setState(prev => ({ ...prev, results: { ...prev.results, [AgentRole.SORA_VIDEOGRAPHER]: { ...prev.results[AgentRole.SORA_VIDEOGRAPHER], content, isStreaming: true } } }));
                 
-                // Update progress view artificially
+                // 人为更新进度视图
                 const p = Math.min(98, Math.floor(content.length / 10));
                 pipelineControl.setProgressDirect({
                     isRunning: true, currentStepIndex: 0, totalProgress: p, startTime: Date.now(),
@@ -196,15 +205,15 @@ export const useStudioLogic = (
                 if (role !== AgentRole.SYNTHESIZER) setActiveTab(role as any);
 
                 let content = "";
-                // Handle Fusion Logic
+                // 处理融合逻辑
                 let inputs = [{ data: state.image, mimeType: state.mimeType }];
                 if (state.isFusionMode && state.productImage && (role === AgentRole.DESCRIPTOR || role === AgentRole.SYNTHESIZER)) {
-                     // For descriptor in fusion, verify if we analyze product or scene. 
-                     // Simplified logic: Synthesizer gets both.
+                     // 对于融合模式下的描述员，验证是分析产品还是场景。
+                     // 简化逻辑：合成师获取两者。
                      if (role === AgentRole.SYNTHESIZER) {
                          inputs.push({ data: state.productImage, mimeType: state.productMimeType });
                      } else if (role === AgentRole.DESCRIPTOR) {
-                         // Swap to product for descriptor in fusion mode
+                         // 在融合模式下，描述员切换到产品
                          inputs = [{ data: state.productImage, mimeType: state.productMimeType }];
                      }
                 }

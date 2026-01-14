@@ -1,3 +1,11 @@
+/**
+ * 文件名: RightPanel.tsx
+ * 功能: 右侧面板组件，包含 Prompt 编辑器和 Agent 分析结果展示。
+ * 核心逻辑:
+ * 1. 管理标签页切换 (Studio vs Agents)。
+ * 2. 渲染 PromptStudioView 或单个 AgentCard。
+ * 3. 显示 Agent 分析状态和结果。
+ */
 
 import React from 'react';
 import { PanelHeader } from '../PanelHeader';
@@ -16,7 +24,7 @@ interface RightPanelProps {
   pipelineProgress: PipelineProgress | null;
   
   // PromptStudio Props
-  promptStudioProps: any; // Using any for brevity in this wrapper, but should ideally match PromptStudioViewProps
+  promptStudioProps: any; // 为了简洁使用 any，但理想情况下应匹配 PromptStudioViewProps
 
   // Agent Actions
   onRegenerateAgent: (role: AgentRole) => void;

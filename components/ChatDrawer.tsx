@@ -1,3 +1,13 @@
+/**
+ * 文件名: ChatDrawer.tsx
+ * 功能: AI 助手聊天侧边抽屉组件。
+ * 核心逻辑:
+ * 1. 显示与 AI 的对话历史。
+ * 2. 渲染不同类型的消息（用户、AI、技能执行结果）。
+ * 3. 支持选择和应用 AI 提供的修改建议。
+ * 4. 支持 Markdown 渲染。
+ */
+
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Icons } from './Icons';
@@ -24,7 +34,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    // Handle ESC key to close
+    // 监听 ESC 键关闭
     React.useEffect(() => {
         if (!isOpen) return;
         const handleEscape = (e: KeyboardEvent) => {
@@ -45,7 +55,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                 className="absolute right-0 top-0 bottom-0 w-[380px] bg-white dark:bg-stone-900 shadow-2xl animate-in slide-in-from-right duration-300 flex flex-col border-l border-stone-200 dark:border-stone-800 transition-colors"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Header */}
+                {/* 头部 */}
                 <div className="p-4 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between flex-shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-stone-100 dark:bg-stone-800 rounded-xl transition-colors">
@@ -64,7 +74,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                     </button>
                 </div>
 
-                {/* Messages Area */}
+                {/* 消息区域 */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                     {messages.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-stone-400 dark:text-stone-600 space-y-3">
@@ -93,7 +103,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
     );
 };
 
-// Individual message bubble component
+// 单个消息气泡组件
 interface ChatMessageBubbleProps {
     message: ChatMessage;
     onApply: (messageId: string, indices: number[]) => void;
@@ -111,7 +121,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({ message, onApply,
         setIsApplying(false);
     };
 
-    // Skill result card
+    // 技能执行结果卡片
     if (isSkillResult && message.suggestions) {
         return (
             <div className="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-2xl p-4 shadow-sm transition-colors">
@@ -175,7 +185,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({ message, onApply,
         );
     }
 
-    // Regular message
+    // 常规消息
     return (
         <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
             <div

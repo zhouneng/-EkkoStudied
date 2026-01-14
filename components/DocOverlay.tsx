@@ -1,3 +1,12 @@
+/**
+ * 文件名: DocOverlay.tsx
+ * 功能: 文档覆盖层组件 (旧版/备用)。
+ * 核心逻辑:
+ * 1. 提供分章节的文档导航。
+ * 2. 渲染静态的文档内容（快速开始、核心概念等）。
+ * 3. 作为全屏模态框显示帮助信息。
+ */
+
 import React, { useState } from 'react';
 import { DocPage } from '../types';
 import { X, Play, Zap, RefreshCcw, PenTool, FileImage, Layout, ShieldCheck } from 'lucide-react';
@@ -102,11 +111,11 @@ const CONTENT: Record<DocPage, React.ReactNode> = {
        </div>
     </div>
   ),
-  'prompt-studio': (<div><h2 className="text-xl font-bold mb-4 text-white">提示词工作室</h2><p className="text-gray-400">This feature documentation is under construction.</p></div>),
-  'image-gen': (<div><h2 className="text-xl font-bold mb-4 text-white">图像生成</h2><p className="text-gray-400">This feature documentation is under construction.</p></div>),
-  'style-ref': (<div><h2 className="text-xl font-bold mb-4 text-white">风格与参考图</h2><p className="text-gray-400">This feature documentation is under construction.</p></div>),
-  'layout': (<div><h2 className="text-xl font-bold mb-4 text-white">蓝图解构</h2><p className="text-gray-400">This feature documentation is under construction.</p></div>),
-  'qa': (<div><h2 className="text-xl font-bold mb-4 text-white">质检与修复</h2><p className="text-gray-400">This feature documentation is under construction.</p></div>),
+  'prompt-studio': (<div><h2 className="text-xl font-bold mb-4 text-white">提示词工作室</h2><p className="text-gray-400">此功能文档正在建设中。</p></div>),
+  'image-gen': (<div><h2 className="text-xl font-bold mb-4 text-white">图像生成</h2><p className="text-gray-400">此功能文档正在建设中。</p></div>),
+  'style-ref': (<div><h2 className="text-xl font-bold mb-4 text-white">风格与参考图</h2><p className="text-gray-400">此功能文档正在建设中。</p></div>),
+  'layout': (<div><h2 className="text-xl font-bold mb-4 text-white">蓝图解构</h2><p className="text-gray-400">此功能文档正在建设中。</p></div>),
+  'qa': (<div><h2 className="text-xl font-bold mb-4 text-white">质检与修复</h2><p className="text-gray-400">此功能文档正在建设中。</p></div>),
 };
 
 const DocOverlay: React.FC<DocOverlayProps> = ({ isOpen, onClose }) => {
@@ -118,7 +127,7 @@ const DocOverlay: React.FC<DocOverlayProps> = ({ isOpen, onClose }) => {
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div className="bg-[#111111] w-[90%] max-w-6xl h-[85vh] rounded-lg border border-[#333] flex overflow-hidden shadow-2xl relative">
         
-        {/* Sidebar */}
+        {/* 侧边栏 */}
         <div className="w-64 border-r border-[#222] bg-[#0c0c0c] flex flex-col h-full">
           <div className="p-6 border-b border-[#222]">
             <h2 className="text-orange-500 font-bold flex items-center gap-2">
@@ -160,7 +169,7 @@ const DocOverlay: React.FC<DocOverlayProps> = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        {/* Content Area */}
+        {/* 内容区域 */}
         <div className="flex-1 bg-[#111111] overflow-y-auto relative">
           <div className="sticky top-0 right-0 p-4 flex justify-end z-10">
             <button 

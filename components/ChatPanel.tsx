@@ -1,3 +1,13 @@
+/**
+ * 文件名: ChatPanel.tsx
+ * 功能: 备用聊天面板组件 (非抽屉模式)。
+ * 核心逻辑:
+ * 1. 渲染聊天消息列表，支持自动滚动到底部。
+ * 2. 提供消息输入框和发送按钮。
+ * 3. 集成快捷技能按钮 (质检、生成)。
+ * 4. 渲染消息气泡，支持 Markdown 和技能结果操作。
+ */
+
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Icons } from './Icons';
@@ -33,7 +43,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
     return (
         <div className="flex flex-col h-full bg-stone-900">
-            {/* Messages Area */}
+            {/* 消息区域 */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                 {messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-stone-600 space-y-3">
@@ -58,9 +68,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area */}
+            {/* 输入区域 */}
             <div className="p-4 border-t border-stone-800 bg-stone-900">
-                {/* Quick Actions */}
+                {/* 快捷技能操作 */}
                 <div className="flex items-center gap-2 mb-3 pb-3 border-b border-stone-800">
                     <span className="text-[9px] font-bold text-stone-500 uppercase">快捷技能</span>
                     <button
@@ -105,7 +115,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     );
 };
 
-// Individual message bubble component
+// 单个消息气泡组件
 interface ChatMessageBubbleProps {
     message: ChatMessage;
     onApply: (messageId: string, indices: number[]) => void;
@@ -123,7 +133,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({ message, onApply,
         setIsApplying(false);
     };
 
-    // Skill result card
+    // 技能结果卡片
     if (isSkillResult && message.suggestions) {
         return (
             <div className="bg-stone-800 border border-stone-700 rounded-2xl p-4 shadow-sm">
@@ -187,7 +197,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({ message, onApply,
         );
     }
 
-    // Regular message
+    // 常规消息
     return (
         <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
             <div

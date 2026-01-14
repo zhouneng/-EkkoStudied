@@ -1,3 +1,12 @@
+/**
+ * 文件名: usePanelResizer.ts
+ * 功能: 面板尺寸调整逻辑 Hook。
+ * 核心逻辑:
+ * 1. 管理左侧面板的百分比宽度和右侧面板的像素宽度。
+ * 2. 监听鼠标拖拽事件，实时计算新的面板尺寸。
+ * 3. 将用户偏好的布局尺寸持久化到 LocalStorage。
+ */
+
 import { useState, useEffect, useRef } from 'react';
 
 export const usePanelResizer = () => {
@@ -7,15 +16,15 @@ export const usePanelResizer = () => {
   const [isDraggingRightDivider, setIsDraggingRightDivider] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
 
-  // Persist left panel width
+  // 持久化左侧面板宽度
   useEffect(() => {
     localStorage.setItem('unimage_left_panel_width', leftPanelWidth.toString());
   }, [leftPanelWidth]);
 
-  // Persist right panel width logic is handled in the drag handler, 
-  // but we can ensure consistency here if needed.
+  // 右侧面板宽度的持久化逻辑在拖拽处理程序中处理，
+  // 但如果需要，可以在此处确保一致性。
 
-  // Divider Drag Handlers
+  // 分隔线拖拽处理程序
   useEffect(() => {
     if (!isDraggingDivider) return;
     const handleMouseMove = (e: MouseEvent) => {

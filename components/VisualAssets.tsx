@@ -1,3 +1,12 @@
+/**
+ * 文件名: VisualAssets.tsx
+ * 功能: 视觉资产管理组件 (备用/旧版)。
+ * 核心逻辑:
+ * 1. 提供拖拽和点击上传图片的功能。
+ * 2. 验证文件类型和大小。
+ * 3. 显示上传图片的预览和替换选项。
+ */
+
 import React, { useRef, useState } from 'react';
 import { Upload, Plus, AlertCircle } from 'lucide-react';
 
@@ -62,13 +71,13 @@ const VisualAssets: React.FC<VisualAssetsProps> = ({ onImageUpload, uploadedImag
 
   return (
     <div className="h-full flex flex-col bg-[#0F0F0F] border-r border-[#222]">
-      {/* Header */}
+      {/* 头部 */}
       <div className="h-12 border-b border-[#222] flex items-center justify-between px-4 text-xs font-semibold tracking-wider text-gray-300">
         <span>VISUAL ASSETS</span>
         <button className="hover:text-white"><Plus size={14} /></button>
       </div>
 
-      {/* Drop Zone */}
+      {/* 放置区域 */}
       <div className="flex-1 p-4 flex flex-col relative">
         <div 
           className={`flex-1 rounded-lg border-2 border-dashed transition-all duration-200 flex flex-col items-center justify-center gap-4 ${

@@ -1,3 +1,12 @@
+/**
+ * 文件名: Workbench.tsx
+ * 功能: 右侧工作台组件，用于显示 Prompt 编辑器、分析日志和交互操作。
+ * 核心逻辑:
+ * 1. 渲染 Markdown 格式的聊天历史。
+ * 2. 处理用户输入指令和快捷操作。
+ * 3. 集成 "逆向"、"生成"、"复制"、"历史" 等核心功能按钮。
+ */
+
 import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { AgentRole, AnalysisState, ChatMessage } from '../types';
@@ -14,13 +23,13 @@ interface WorkbenchProps {
 const Workbench: React.FC<WorkbenchProps> = ({ 
   chatHistory, 
   analysisState, 
-  onAnalyze,
+  onAnalyze, 
   isImageLoaded
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState('');
 
-  // Auto-scroll to bottom of chat
+  // 自动滚动到聊天底部
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -29,7 +38,7 @@ const Workbench: React.FC<WorkbenchProps> = ({
 
   return (
     <div className="h-full flex flex-col bg-[#0c0a09] relative">
-      {/* Header / Tabs */}
+      {/* 头部 / 标签页 */}
       <div className="h-12 border-b border-[#222] flex items-center justify-between px-4">
         <div className="flex items-center gap-1 text-xs font-semibold text-gray-400">
            <span>WORKBENCH</span>
@@ -45,7 +54,7 @@ const Workbench: React.FC<WorkbenchProps> = ({
         </div>
       </div>
 
-      {/* Sub-header Actions */}
+      {/* 子头部操作 */}
       <div className="px-6 py-4 flex items-center justify-between border-b border-[#1a1a1a]">
         <div>
             <h2 className="text-white font-semibold text-sm font-serif">Prompt Studio</h2>
@@ -60,7 +69,7 @@ const Workbench: React.FC<WorkbenchProps> = ({
         </div>
       </div>
 
-      {/* Main Content Area (Chat/Log) */}
+      {/* 主要内容区域 (聊天/日志) */}
       <div 
         ref={scrollRef}
         className="flex-1 overflow-y-auto p-6 space-y-8 font-mono text-sm scroll-smooth"
@@ -74,7 +83,7 @@ const Workbench: React.FC<WorkbenchProps> = ({
                 <div key={msg.id} className="animate-fade-in">
                     {msg.role === 'model' ? (
                         <div className="flex gap-4">
-                           {/* Avatar/Icon logic could go here based on msg.agent */}
+                           {/* 头像/图标逻辑可在此处基于 msg.agent 添加 */}
                            <div className="flex-1 text-gray-300 leading-relaxed markdown-content">
                                 {msg.agent && (
                                     <div className={`text-[10px] uppercase tracking-wider mb-2 font-bold ${AGENTS[msg.agent].color.replace('bg-', 'text-')}`}>
@@ -114,7 +123,7 @@ const Workbench: React.FC<WorkbenchProps> = ({
         )}
       </div>
 
-      {/* Action Bar */}
+      {/* 操作栏 */}
       <div className="px-6 pb-2">
          <div className="flex gap-2">
             <button 
@@ -140,7 +149,7 @@ const Workbench: React.FC<WorkbenchProps> = ({
          </div>
       </div>
 
-      {/* Input Area */}
+      {/* 输入区域 */}
       <div className="p-4 pt-2">
         <div className="bg-[#1a1a1a] rounded-lg border border-[#333] p-3 flex flex-col gap-2">
             <textarea 

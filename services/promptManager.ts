@@ -1,3 +1,11 @@
+/**
+ * 文件名: promptManager.ts
+ * 功能: 提示词模板管理服务。
+ * 核心逻辑:
+ * 1. 管理不同 Agent 角色的 Prompt 版本 (Local Storage)。
+ * 2. 支持获取、保存、激活和删除特定版本的 Prompt。
+ */
+
 export interface PromptVersion {
     id: string;
     name: string;

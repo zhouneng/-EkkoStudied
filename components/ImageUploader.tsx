@@ -1,3 +1,13 @@
+/**
+ * 文件名: ImageUploader.tsx
+ * 功能: 图像上传组件。
+ * 核心逻辑:
+ * 1. 提供文件拖拽区域和点击上传功能。
+ * 2. 验证文件类型（图片/视频）和大小限制。
+ * 3. 将文件读取为 Base64 格式并计算宽高比。
+ * 4. 支持粘贴板图片粘贴功能。
+ */
+
 import React, { useRef, useState, useEffect } from 'react';
 import { Icons } from './Icons';
 
@@ -15,6 +25,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, d
   const [mimeType, setMimeType] = useState<string>("");
   const [customDuration, setCustomDuration] = useState<string>("");
 
+  // 计算最接近的预设宽高比
   const calculateNearestRatio = (width: number, height: number): string => {
     const ratio = width / height;
     const ratios = [
@@ -68,10 +79,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, d
     }
   };
 
-  // Auto-submit images when ready
+  // 自动提交图像
   useEffect(() => {
     if (preview && base64Data && mimeType.startsWith('image/')) {
-      // Short timeout to allow state to settle, then submit
+      // 稍微延迟以确保状态稳定
       const timer = setTimeout(() => {
         onImageSelected(base64Data, aspectRatio, mimeType);
       }, 100);
@@ -79,7 +90,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelected, d
     }
   }, [preview, base64Data, mimeType, aspectRatio, onImageSelected]);
 
-  // 粘贴功能实现
+  // 全局粘贴功能实现
   useEffect(() => {
     const handleGlobalPaste = (e: ClipboardEvent) => {
       if (disabled || preview) return;

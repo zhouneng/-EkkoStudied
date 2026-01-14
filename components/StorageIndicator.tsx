@@ -1,14 +1,23 @@
+/**
+ * 文件名: StorageIndicator.tsx
+ * 功能: LocalStorage 使用量指示器。
+ * 核心逻辑:
+ * 1. 计算 LocalStorage 当前已用空间和总容量（估算值）。
+ * 2. 周期性更新使用率。
+ * 3. 当使用量过高时改变颜色警告，并显示详细信息 Tooltip。
+ */
+
 import React, { useState, useEffect } from 'react';
 
 export const StorageIndicator: React.FC = () => {
-    const [usage, setUsage] = useState({ used: 0, total: 5 * 1024 * 1024, percent: 0 }); // Assume 5MB limit
+    const [usage, setUsage] = useState({ used: 0, total: 5 * 1024 * 1024, percent: 0 }); // 假设 5MB 限制
     const [isHovered, setIsHovered] = useState(false);
 
     const calculateUsage = () => {
         let total = 0;
         for (const key in localStorage) {
             if (localStorage.hasOwnProperty(key)) {
-                total += (localStorage[key].length + key.length) * 2; // Approximating char size (UTF-16 is 2 bytes)
+                total += (localStorage[key].length + key.length) * 2; // 估算字符大小 (UTF-16 为 2 字节)
             }
         }
         
@@ -31,7 +40,7 @@ export const StorageIndicator: React.FC = () => {
 
     useEffect(() => {
         calculateUsage();
-        // Recalculate every 2 seconds or add listener if possible
+        // 每 2 秒重新计算一次
         const interval = setInterval(calculateUsage, 2000);
         return () => clearInterval(interval);
     }, []);
@@ -61,7 +70,7 @@ export const StorageIndicator: React.FC = () => {
                 </div>
             </div>
 
-            {/* Tooltip */}
+            {/* 工具提示 */}
             <div className={`absolute top-full right-0 mt-2 p-2 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded shadow-xl z-50 text-xs text-stone-600 dark:text-stone-300 w-48 pointer-events-none transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
                 <div className="flex justify-between mb-1">
                     <span>Used:</span>

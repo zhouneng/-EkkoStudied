@@ -10,7 +10,7 @@
     "db:setup": "npx prisma generate && npx prisma db push && npx tsx prisma/seed.ts",
     "db:nuke": "npx prisma generate && npx prisma db push && npx tsx prisma/seed.ts",
     "db:studio": "npx prisma studio",
-    "db:force": "bash force_connect.sh"
+    "db:force": "bash scripts/force_connect.sh"
   },
   "dependencies": {
     "@google/genai": "^1.33.0",

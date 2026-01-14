@@ -1,3 +1,12 @@
+/**
+ * 文件名: AgentCard.tsx
+ * 功能: 智能代理 (Agent) 结果展示卡片组件。
+ * 核心逻辑:
+ * 1. 显示 Agent 的名称、描述和运行状态（分析中、已完成）。
+ * 2. 提供一个只读或可编辑的文本区域来展示分析结果。
+ * 3. 提供“重新生成”和“复制内容”的操作按钮。
+ */
+
 import React from 'react';
 import { AgentConfig, AnalysisResult } from '../types';
 import { Icons } from './Icons';
@@ -19,7 +28,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ config, result, isActive, 
 
   return (
     <div className="flex flex-col h-full animate-in fade-in duration-500">
-      {/* Header */}
+      {/* 头部区域 */}
       <div className="flex items-center justify-between pb-4 border-b border-stone-200 dark:border-stone-800 flex-shrink-0 transition-colors">
         <div>
           <h2 className="text-base font-serif font-bold text-stone-800 dark:text-stone-200">{config.name}</h2>
@@ -27,7 +36,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ config, result, isActive, 
         </div>
 
         <div className="flex items-center gap-1.5">
-          {/* Status Indicators */}
+          {/* 状态指示器 */}
           {isComplete && (
             <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-bold">
               <Icons.CheckCircle2 size={12} /> 已完成
@@ -42,7 +51,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ config, result, isActive, 
         </div>
       </div>
 
-      {/* Editable Content */}
+      {/* 可编辑内容区域 */}
       <div className="flex-1 min-h-0 pt-4 pb-16 relative">
         {content ? (
           <textarea
@@ -83,11 +92,11 @@ export const AgentCard: React.FC<AgentCardProps> = ({ config, result, isActive, 
         )}
       </div>
 
-      {/* Bottom Actions */}
+      {/* 底部操作栏 */}
       {content && (
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 z-10 transition-colors">
           <div className="flex items-center gap-2">
-            {/* Regenerate Button */}
+            {/* 重新生成按钮 */}
             {onRegenerate && (
               <button
                 onClick={onRegenerate}
@@ -99,7 +108,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ config, result, isActive, 
               </button>
             )}
 
-            {/* Copy Button */}
+            {/* 复制按钮 */}
             <button
               onClick={onCopy || (() => { navigator.clipboard.writeText(content); })}
               disabled={isActive}

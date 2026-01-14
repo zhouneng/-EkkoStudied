@@ -1,3 +1,12 @@
+/**
+ * 文件名: chatService.ts
+ * 功能: 聊天服务层，处理用户与 AI 助手的对话逻辑。
+ * 核心逻辑:
+ * 1. 创建用户和 AI 消息对象。
+ * 2. 检测用户意图 (Skill Intent) 并分发到不同的处理逻辑 (质检、逆向、优化)。
+ * 3. 执行具体的技能操作，如质量检查 (Quality Check) 和 Prompt 优化。
+ */
+
 import { createGeminiClient } from './geminiService';
 import { ChatMessage, SkillType, AgentRole } from '../types';
 import { AGENTS } from '../constants';

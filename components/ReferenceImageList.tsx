@@ -1,3 +1,12 @@
+/**
+ * 文件名: ReferenceImageList.tsx
+ * 功能: 参考图列表组件。
+ * 核心逻辑:
+ * 1. 横向滚动展示已添加的参考图缩略图。
+ * 2. 提供移除和预览参考图的功能。
+ * 3. 显示当前参考图的总数量。
+ */
+
 import React from 'react';
 import { Icons } from './Icons';
 import { ReferenceImage } from '../types';

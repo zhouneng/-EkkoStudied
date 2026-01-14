@@ -1,3 +1,12 @@
+/**
+ * 文件名: usePipelineProgress.ts
+ * 功能: 管理分析流水线进度的 Hook。
+ * 核心逻辑:
+ * 1. 初始化流水线步骤状态。
+ * 2. 更新单个步骤的进度和内容。
+ * 3. 处理步骤完成和错误状态。
+ */
+
 import { useState, useRef, useCallback } from 'react';
 import { PipelineProgress, PipelineStepStatus } from '../types';
 import { AGENTS, PIPELINE_ORDER } from '../constants';

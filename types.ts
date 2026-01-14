@@ -1,3 +1,11 @@
+/**
+ * 文件名: types.ts
+ * 功能: 全局类型定义文件。
+ * 核心逻辑:
+ * 1. 定义 Agent 角色枚举 (AgentRole) 和配置接口。
+ * 2. 定义聊天消息、分析状态、流水线步骤等核心数据结构。
+ * 3. 定义应用全局状态接口 (AppState) 和历史记录项 (HistoryItem)。
+ */
 
 import React from 'react';
 

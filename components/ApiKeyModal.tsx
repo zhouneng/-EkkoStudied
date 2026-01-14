@@ -1,3 +1,12 @@
+/**
+ * 文件名: ApiKeyModal.tsx
+ * 功能: API Key 配置模态框组件。
+ * 核心逻辑:
+ * 1. 提供 API Key 的输入和保存功能。
+ * 2. 支持切换 "官方 API" 和 "自定义端点" 模式。
+ * 3. 提供连接测试功能，验证 Key 和 Endpoint 是否有效。
+ * 4. 允许配置不同任务（推理、快速、绘图）使用的模型名称。
+ */
 
 import React, { useState, useEffect } from 'react';
 import { Icons } from './Icons';
@@ -12,16 +21,16 @@ interface ApiKeyModalProps {
 export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
   const [apiMode, setApiMode] = useState<'official' | 'custom'>('custom');
 
-  // Separate states for keys
+  // 分离 Key 状态
   const [officialKey, setOfficialKey] = useState('');
   const [customKey, setCustomKey] = useState('');
   const [baseUrl, setBaseUrl] = useState('');
 
-  // Derived current key for display/logic
+  // 根据模式获取当前 Key
   const currentKey = apiMode === 'official' ? officialKey : customKey;
   const setApiKey = (val: string) => apiMode === 'official' ? setOfficialKey(val) : setCustomKey(val);
 
-  // Model Config State
+  // 模型配置状态
   const [reasoningModel, setReasoningModel] = useState('gemini-3-pro-high');
   const [fastModel, setFastModel] = useState('gemini-3-flash');
   const [imageModel, setImageModel] = useState('gemini-3-pro-image');
@@ -33,16 +42,16 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
 
   useEffect(() => {
     if (isOpen) {
-      // 1. Load API Mode
+      // 1. 加载 API 模式
       const storedMode = (localStorage.getItem('berryxia_api_mode') || 'custom') as 'official' | 'custom';
       setApiMode(storedMode);
 
-      // 2. Load Base URL
+      // 2. 加载 Base URL
       const storedUrl = localStorage.getItem('berryxia_base_url') || process.env.API_ENDPOINT || 'http://127.0.0.1:8045';
       setBaseUrl(storedUrl);
 
-      // 3. Load Keys with robust fallback to GEMINI_API_KEY
-      // Priority: Specific storage > GEMINI_API_KEY > Environment
+      // 3. 加载 Keys (提供 GEMINI_API_KEY 作为健壮的回退)
+      // 优先级: 特定存储 > GEMINI_API_KEY > 环境变量
       const globalKey = localStorage.getItem('GEMINI_API_KEY') || process.env.GEMINI_API_KEY || '';
       
       const storedOfficialKey = localStorage.getItem('berryxia_api_key_official') || (storedMode === 'official' ? globalKey : '');
@@ -51,7 +60,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
       setOfficialKey(storedOfficialKey || (storedMode === 'official' ? globalKey : ''));
       setCustomKey(storedCustomKey || (storedMode === 'custom' ? globalKey : ''));
 
-      // 4. Load Models - different defaults for official vs custom
+      // 4. 加载模型配置 - 官方和自定义模式默认值不同
       let defaultReasoning = 'gemini-3-pro-high';
       let defaultFast = 'gemini-3-flash';
       let defaultImage = 'gemini-3-pro-image';
@@ -89,16 +98,16 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
     try {
       let client: GoogleGenAI;
 
-      // Update configuration in memory immediately for the test
+      // 立即在内存中更新配置以便测试
       configureClient(currentKey, baseUrl, apiMode);
 
       if (apiMode === 'official') {
-        // Official Google AI API - no custom baseUrl
+        // 官方 Google AI API - 无自定义 baseUrl
         client = new GoogleGenAI({
           apiKey: currentKey
         });
       } else {
-        // Custom endpoint
+        // 自定义端点
         let finalUrl = baseUrl;
         if (finalUrl.endsWith('/v1')) {
           finalUrl = finalUrl.substring(0, finalUrl.length - 3);
@@ -112,7 +121,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
         });
       }
 
-      // Use ai.models.generateContent per SDK docs
+      // 使用 ai.models.generateContent 进行测试
       await client.models.generateContent({
         model: fastModel,
         contents: "Ping"
@@ -121,10 +130,10 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
       setStatus('success');
       setStatusMsg("连接成功！");
 
-      // CRITICAL: Save to LocalStorage on success immediately
+      // 关键: 测试成功后立即保存到 LocalStorage
       localStorage.setItem('GEMINI_API_KEY', currentKey);
       
-      // Also save specific keys
+      // 同时保存特定模式的 Key
       if (apiMode === 'official') localStorage.setItem('berryxia_api_key_official', currentKey);
       else localStorage.setItem('berryxia_api_key_custom', currentKey);
 
@@ -140,32 +149,32 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
   const handleSave = () => {
     if (apiMode === 'custom' && !baseUrl) return;
     
-    // Save API mode
+    // 保存 API 模式
     localStorage.setItem('berryxia_api_mode', apiMode);
     localStorage.setItem('berryxia_base_url', baseUrl);
 
-    // Save Keys Separately
+    // 分别保存 Keys
     localStorage.setItem('berryxia_api_key_official', officialKey);
     localStorage.setItem('berryxia_api_key_custom', customKey);
 
-    // CRITICAL: Force save the current active key as the global GEMINI_API_KEY
+    // 关键: 强制将当前活动的 Key 保存为全局 GEMINI_API_KEY
     const keyToSave = apiMode === 'official' ? officialKey : customKey;
     if (keyToSave) {
         localStorage.setItem('GEMINI_API_KEY', keyToSave);
-        // Legacy support
+        // 兼容旧版本
         localStorage.setItem('berryxia_api_key', keyToSave);
     }
 
-    // Save Models
+    // 保存模型配置
     localStorage.setItem('berryxia_model_reasoning', reasoningModel);
     localStorage.setItem('berryxia_model_fast', fastModel);
     localStorage.setItem('berryxia_model_image', imageModel);
 
-    // Update Runtime Config (Hot Update)
+    // 更新运行时配置 (热更新)
     configureClient(keyToSave, baseUrl, apiMode);
     configureModels({ reasoning: reasoningModel, fast: fastModel, image: imageModel });
 
-    // NO RELOAD - Hot update only
+    // 不重新加载 - 仅热更新
     alert("配置已保存，即时生效！");
     onClose();
   };
@@ -198,14 +207,14 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
         <div className="p-6 space-y-5 overflow-y-auto flex-1">
           {activeTab === 'connection' && (
             <>
-              {/* API Mode Selector */}
+              {/* API 模式选择器 */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-stone-500 uppercase tracking-widest">API 模式</label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => {
                       setApiMode('official');
-                      // Load specific defaults if switching
+                      // 切换时加载特定默认值
                       setReasoningModel('gemini-3-flash-preview');
                       setFastModel('gemini-3-flash-preview');
                       setImageModel('gemini-2.5-flash-image');
@@ -240,7 +249,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
                 </div>
               </div>
 
-              {/* Custom Endpoint (only show in custom mode) */}
+              {/* 自定义 Endpoint (仅在自定义模式下显示) */}
               {apiMode === 'custom' && (
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-stone-500 uppercase tracking-widest">Target Endpoint</label>
@@ -285,7 +294,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
             <div className="space-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-stone-500 uppercase tracking-widest">Reasoning Model</label>
-                <p className="text-[10px] text-stone-600">Used for deep analysis (Agents, Architect, Auditor)</p>
+                <p className="text-[10px] text-stone-600">用于深度分析 (Agents, Architect, Auditor)</p>
                 <input
                   type="text"
                   value={reasoningModel}
@@ -295,7 +304,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-stone-500 uppercase tracking-widest">Fast Model</label>
-                <p className="text-[10px] text-stone-600">Used for translation & UI layout detection</p>
+                <p className="text-[10px] text-stone-600">用于翻译和 UI 布局检测</p>
                 <input
                   type="text"
                   value={fastModel}
@@ -305,7 +314,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-stone-500 uppercase tracking-widest">Image Model</label>
-                <p className="text-[10px] text-stone-600">Used for visual generation</p>
+                <p className="text-[10px] text-stone-600">用于视觉生成</p>
                 <input
                   type="text"
                   value={imageModel}
@@ -344,4 +353,4 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => 
       </div>
     </div>
   );
-}
+};

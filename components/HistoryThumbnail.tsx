@@ -1,3 +1,12 @@
+/**
+ * 文件名: HistoryThumbnail.tsx
+ * 功能: 历史记录缩略图组件。
+ * 核心逻辑:
+ * 1. 显示单张历史图片的缩略图。
+ * 2. 处理选中、悬停、删除和下载操作。
+ * 3. 根据激活状态应用高亮边框样式。
+ */
+
 import React from 'react';
 import { Icons } from './Icons';
 
@@ -46,7 +55,7 @@ export const HistoryThumbnail: React.FC<HistoryThumbnailProps> = ({
         className="w-full h-full object-cover transition-transform duration-200"
       />
 
-      {/* Delete button - appears on hover */}
+      {/* 删除按钮 - 悬停时显示 */}
       {onDelete && (
         <button
           onClick={handleDelete}

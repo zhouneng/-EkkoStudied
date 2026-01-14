@@ -1,3 +1,11 @@
+/**
+ * 文件名: LeftPanel.tsx
+ * 功能: 左侧面板组件，包含图像上传、展示和对比功能。
+ * 核心逻辑:
+ * 1. 组合 ImageUploader, ImageViewer 和 ImageComparisonSlider。
+ * 2. 处理文件上传、拖拽逻辑和融合模式 (Fusion Mode) 切换。
+ * 3. 响应用户缩放、下载和全屏操作。
+ */
 
 import React, { useState } from 'react';
 import { Icons } from '../Icons';
@@ -28,7 +36,7 @@ interface LeftPanelProps {
   showToast: (msg: string, type: 'info' | 'success' | 'error') => void;
 }
 
-// Helper to determine image source
+// 确定图像来源的辅助函数
 const getImageSrc = (data: string | null | undefined, mimeType: string = 'image/png') => {
   if (!data) return '';
   if (data.startsWith('http')) return data;
@@ -53,7 +61,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
   handleReset,
   showToast
 }) => {
-  // Local drag states for specific drop zones
+  // 特定放置区域的本地拖拽状态
   const [isDraggingScene, setIsDraggingScene] = useState(false);
   const [isDraggingProduct, setIsDraggingProduct] = useState(false);
   const [isDraggingNewImage, setIsDraggingNewImage] = useState(false);

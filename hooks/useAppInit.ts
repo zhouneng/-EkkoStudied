@@ -1,3 +1,12 @@
+/**
+ * 文件名: useAppInit.ts
+ * 功能: 应用初始化逻辑 Hook。
+ * 核心逻辑:
+ * 1. 加载用户偏好设置（主题、API模式）。
+ * 2. 检查 API Key 状态。
+ * 3. 从 IndexedDB 恢复历史记录和缓存的任务状态。
+ */
+
 import { useState, useEffect } from 'react';
 import { getHistory } from '../services/historyService';
 import { loadCurrentTask } from '../services/cacheService';
@@ -12,7 +21,7 @@ export const useAppInit = (INITIAL_STATE: AppState) => {
   const [initialAppState, setInitialAppState] = useState<Partial<AppState>>({});
   const [initialDisplayImage, setInitialDisplayImage] = useState<string | null>(null);
 
-  // Theme Handling
+  // 主题处理
   useEffect(() => {
     const savedTheme = localStorage.getItem('berryxia_theme') as 'light' | 'dark' | null;
     if (savedTheme) {
@@ -29,24 +38,24 @@ export const useAppInit = (INITIAL_STATE: AppState) => {
     localStorage.setItem('berryxia_theme', theme);
   }, [theme]);
 
-  // Initialization Logic
+  // 初始化逻辑
   useEffect(() => {
     const init = async () => {
-      // Load API Mode
+      // 加载 API 模式
       const storedMode = (localStorage.getItem('berryxia_api_mode') || 'custom') as 'official' | 'custom';
       setApiMode(storedMode);
 
-      // Load specific model name
+      // 加载特定模型名称
       const storedFastModel = localStorage.getItem('berryxia_model_fast');
       if (storedFastModel) setActiveModelName(storedFastModel);
 
-      // Check for Environment Key
+      // 检查环境变量 Key
       const envKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
       if (envKey && envKey.length > 10) {
         setHasKey(true);
       }
 
-      // Check LocalStorage Key
+      // 检查 LocalStorage Key
       const storedKey = storedMode === 'official'
         ? (localStorage.getItem('berryxia_api_key_official') || localStorage.getItem('berryxia_api_key'))
         : (localStorage.getItem('berryxia_api_key_custom') || localStorage.getItem('berryxia_api_key'));
@@ -63,7 +72,7 @@ export const useAppInit = (INITIAL_STATE: AppState) => {
         let mergedState: Partial<AppState> = { history: hist };
 
         if (cached) {
-          // Rebuild generated images from history if needed
+          // 如果需要，从历史记录重建生成的图像
           const imagesFromHistory = hist
             .filter(item => item.generatedImage)
             .map(item => item.generatedImage as string);
@@ -90,12 +99,12 @@ export const useAppInit = (INITIAL_STATE: AppState) => {
             referenceImages: cached.referenceImages || []
           };
 
-          // Restore display image
+          // 恢复显示图像
           if (cached.displayImage) {
             setInitialDisplayImage(cached.displayImage);
           }
         } else {
-          // Fallback if no cache but history exists
+          // 如果没有缓存但存在历史记录，则回退
           if (hist.length > 0) {
             mergedState.generatedImage = hist[0].generatedImage;
             const imagesFromHistory = hist

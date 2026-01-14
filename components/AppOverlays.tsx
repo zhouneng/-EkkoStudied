@@ -1,3 +1,12 @@
+/**
+ * 文件名: AppOverlays.tsx
+ * 功能: 应用程序全局覆盖层管理组件。
+ * 核心逻辑:
+ * 1. 集中渲染所有模态框 (Modals) 和全屏覆盖层 (Toast, Help, ApiKey, PromptLab)。
+ * 2. 处理图片全屏查看和全屏对比功能。
+ * 3. 避免在主 App 组件中堆积过多的 Modal 代码。
+ */
+
 import React from 'react';
 import { ToastContainer, ToastMessage, ToastType } from './ToastContainer';
 import { DocumentationModal } from './DocumentationModal';
@@ -45,7 +54,7 @@ export const AppOverlays: React.FC<AppOverlaysProps> = ({
       <ApiKeyModal isOpen={isKeyModalOpen} onClose={() => setIsKeyModalOpen(false)} />
       <PromptLabModal isOpen={isPromptLabOpen} onClose={() => setIsPromptLabOpen(false)} />
 
-      {/* Fullscreen Overlay */}
+      {/* 全屏覆盖层 */}
       {fullscreenImg && (
         <div className="fixed inset-0 z-[200] bg-white/95 dark:bg-black/95 backdrop-blur-md animate-in fade-in duration-300" onClick={() => { setFullscreenImg(null); setIsFullscreenComparison(false); }}>
           <button onClick={(e) => { e.stopPropagation(); setFullscreenImg(null); setIsFullscreenComparison(false); }} className="absolute top-10 right-10 p-4"><Icons.X size={32} /></button>

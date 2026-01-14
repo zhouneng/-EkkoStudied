@@ -1,9 +1,17 @@
+/**
+ * 文件名: geminiService.ts
+ * 功能: Gemini API 核心服务层，封装了与 Google GenAI 的交互逻辑。
+ * 核心逻辑:
+ * 1. 管理 API Key 和客户端配置。
+ * 2. 提供流式 Agent 分析 (streamAgentAnalysis) 和图像生成功能。
+ * 3. 处理 Prompt 翻译、布局检测及智能分析等辅助功能。
+ */
 
 import { GoogleGenAI } from "@google/genai";
 import { AgentRole, LayoutElement } from "../types";
 import { AGENTS } from "../constants";
 
-// Configuration state
+// 配置状态
 let clientConfig = {
     apiKey: process.env.API_KEY || '',
     baseUrl: '',
@@ -24,7 +32,7 @@ export const configureModels = (config: { reasoning: string; fast: string; image
     modelConfig = config;
 };
 
-// Helper to convert File to Base64
+// 将文件转换为 Base64 的辅助函数
 export const fileToGenerativePart = async (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -41,18 +49,18 @@ export const fileToGenerativePart = async (file: File): Promise<string> => {
 export const createGeminiClient = () => {
     let key = clientConfig.apiKey;
     
-    // 1. Priority: Memory Config (already checked above)
+    // 1. 优先级: 内存配置 (上面已检查)
 
-    // 2. Priority: LocalStorage (Fallback)
+    // 2. 优先级: LocalStorage (回退方案)
     if (!key && typeof window !== 'undefined') {
         const storedKey = localStorage.getItem('GEMINI_API_KEY');
         if (storedKey) {
             key = storedKey;
-            clientConfig.apiKey = storedKey; // Update memory config to avoid repeated lookups
+            clientConfig.apiKey = storedKey; // 更新内存配置以避免重复查找
         }
     }
 
-    // 3. Priority: Environment Variable
+    // 3. 优先级: 环境变量
     if (!key) {
         key = process.env.API_KEY || '';
     }
@@ -86,12 +94,12 @@ export async function* streamAgentAnalysis(
 
   const parts: any[] = [];
   
-  // Add images to content parts
+  // 将图像添加到内容部分
   images.forEach(img => {
       parts.push({ inlineData: { mimeType: img.mimeType, data: img.data } });
   });
   
-  // Add prompt text
+  // 添加提示词文本
   parts.push({ text: prompt });
 
   const responseStream = await ai.models.generateContentStream({
@@ -115,7 +123,7 @@ export const analyzeImageWithAgent = async (
   previousContext: string = ""
 ): Promise<string> => {
     let text = "";
-    // Wrap single image in array for backward compatibility helper
+    // 将单张图片包装在数组中以兼容旧助手函数
     const stream = streamAgentAnalysis(agent, [{ data: base64Image, mimeType: 'image/jpeg' }], previousContext);
     for await (const chunk of stream) {
         text += chunk;

@@ -1,3 +1,12 @@
+/**
+ * 文件名: soundService.ts
+ * 功能: 全局音效服务管理。
+ * 核心逻辑:
+ * 1. 使用 Web Audio API 生成简单的提示音。
+ * 2. 管理音效开关状态并持久化到 LocalStorage。
+ * 3. 提供开始、完成、错误等不同场景的音效方法。
+ */
+
 class SoundService {
   private enabled: boolean = true;
   private audioContext: AudioContext | null = null;

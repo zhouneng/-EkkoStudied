@@ -1,0 +1,355 @@
+/**
+ * 文件名: ApiKeyModal.tsx
+ * 功能: API Key 配置弹窗。
+ * 核心逻辑:
+ * 1. 允许用户输入和测试 Gemini API Key。
+ * 2. 支持切换官方 API 和自定义 Endpoint 模式。
+ * 3. 将 Key 和配置持久化到 LocalStorage。
+ */
+
+import React, { useState, useEffect } from 'react';
+import { Icons } from '../common/Icons';
+import { configureClient, configureModels } from '../../services/geminiService';
+import { GoogleGenAI } from '@google/genai';
+
+interface ApiKeyModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose }) => {
+  const [apiMode, setApiMode] = useState<'official' | 'custom'>('custom');
+
+  // 独立的 Key 状态
+  const [officialKey, setOfficialKey] = useState('');
+  const [customKey, setCustomKey] = useState('');
+  const [baseUrl, setBaseUrl] = useState('');
+
+  // 派生的当前 Key，用于显示/逻辑
+  const currentKey = apiMode === 'official' ? officialKey : customKey;
+  const setApiKey = (val: string) => apiMode === 'official' ? setOfficialKey(val) : setCustomKey(val);
+
+  // 模型配置状态
+  const [reasoningModel, setReasoningModel] = useState('gemini-3-pro-high');
+  const [fastModel, setFastModel] = useState('gemini-3-flash');
+  const [imageModel, setImageModel] = useState('gemini-3-pro-image');
+
+  const [isTestLoading, setIsTestLoading] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [statusMsg, setStatusMsg] = useState('');
+  const [activeTab, setActiveTab] = useState<'connection' | 'models'>('connection');
+
+  useEffect(() => {
+    if (isOpen) {
+      // 1. 加载 API 模式
+      const storedMode = (localStorage.getItem('berryxia_api_mode') || 'custom') as 'official' | 'custom';
+      setApiMode(storedMode);
+
+      // 2. 加载 Base URL
+      const storedUrl = localStorage.getItem('berryxia_base_url') || process.env.API_ENDPOINT || 'http://127.0.0.1:8045';
+      setBaseUrl(storedUrl);
+
+      // 3. 加载 Key，提供 GEMINI_API_KEY 作为健壮的回退
+      // 优先级: 特定存储 > GEMINI_API_KEY > 环境变量
+      const globalKey = localStorage.getItem('GEMINI_API_KEY') || process.env.GEMINI_API_KEY || '';
+      
+      const storedOfficialKey = localStorage.getItem('berryxia_api_key_official') || (storedMode === 'official' ? globalKey : '');
+      const storedCustomKey = localStorage.getItem('berryxia_api_key_custom') || (storedMode === 'custom' ? globalKey : '');
+
+      setOfficialKey(storedOfficialKey || (storedMode === 'official' ? globalKey : ''));
+      setCustomKey(storedCustomKey || (storedMode === 'custom' ? globalKey : ''));
+
+      // 4. 加载模型 - 官方和自定义模式的默认值不同
+      let defaultReasoning = 'gemini-3-pro-high';
+      let defaultFast = 'gemini-3-flash';
+      let defaultImage = 'gemini-3-pro-image';
+
+      if (storedMode === 'official') {
+        defaultReasoning = 'gemini-3-flash-preview';
+        defaultFast = 'gemini-3-flash-preview';
+        defaultImage = 'gemini-2.5-flash-image';
+      }
+
+      const r = localStorage.getItem('berryxia_model_reasoning') || defaultReasoning;
+      const f = localStorage.getItem('berryxia_model_fast') || defaultFast;
+      const i = localStorage.getItem('berryxia_model_image') || defaultImage;
+      setReasoningModel(r);
+      setFastModel(f);
+      setImageModel(i);
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleTestConnection = async () => {
+    if (!currentKey) {
+      setStatus('error');
+      setStatusMsg("API Key 不能为空");
+      return;
+    }
+    if (apiMode === 'custom' && !baseUrl) {
+      setStatus('error');
+      setStatusMsg("自定义模式下 Endpoint 不能为空");
+      return;
+    }
+    setIsTestLoading(true);
+    setStatus('idle');
+    try {
+      let client: GoogleGenAI;
+
+      // 立即在内存中更新配置以便测试
+      configureClient(currentKey, baseUrl, apiMode);
+
+      if (apiMode === 'official') {
+        // 官方 Google AI API - 无自定义 baseUrl
+        client = new GoogleGenAI({
+          apiKey: currentKey
+        });
+      } else {
+        // 自定义端点
+        let finalUrl = baseUrl;
+        if (finalUrl.endsWith('/v1')) {
+          finalUrl = finalUrl.substring(0, finalUrl.length - 3);
+        } else if (finalUrl.endsWith('/v1/')) {
+          finalUrl = finalUrl.substring(0, finalUrl.length - 4);
+        }
+
+        client = new GoogleGenAI({
+          apiKey: currentKey,
+          httpOptions: { baseUrl: finalUrl }
+        });
+      }
+
+      // 根据 SDK 文档使用 ai.models.generateContent
+      await client.models.generateContent({
+        model: fastModel,
+        contents: "Ping"
+      });
+
+      setStatus('success');
+      setStatusMsg("连接成功！");
+
+      // 关键: 成功后立即保存到 LocalStorage
+      localStorage.setItem('GEMINI_API_KEY', currentKey);
+      
+      // 同时保存特定的 Key
+      if (apiMode === 'official') localStorage.setItem('berryxia_api_key_official', currentKey);
+      else localStorage.setItem('berryxia_api_key_custom', currentKey);
+
+    } catch (e: any) {
+      console.error(e);
+      setStatus('error');
+      setStatusMsg(`连接失败: ${e.message || '未知错误'}`);
+    } finally {
+      setIsTestLoading(false);
+    }
+  };
+
+  const handleSave = () => {
+    if (apiMode === 'custom' && !baseUrl) return;
+    
+    // 保存 API 模式
+    localStorage.setItem('berryxia_api_mode', apiMode);
+    localStorage.setItem('berryxia_base_url', baseUrl);
+
+    // 分别保存 Key
+    localStorage.setItem('berryxia_api_key_official', officialKey);
+    localStorage.setItem('berryxia_api_key_custom', customKey);
+
+    // 关键: 强制将当前活动的 Key 保存为全局 GEMINI_API_KEY
+    const keyToSave = apiMode === 'official' ? officialKey : customKey;
+    if (keyToSave) {
+        localStorage.setItem('GEMINI_API_KEY', keyToSave);
+        // 旧版本支持
+        localStorage.setItem('berryxia_api_key', keyToSave);
+    }
+
+    // 保存模型
+    localStorage.setItem('berryxia_model_reasoning', reasoningModel);
+    localStorage.setItem('berryxia_model_fast', fastModel);
+    localStorage.setItem('berryxia_model_image', imageModel);
+
+    // 更新运行时配置 (热更新)
+    configureClient(keyToSave, baseUrl, apiMode);
+    configureModels({ reasoning: reasoningModel, fast: fastModel, image: imageModel });
+
+    // 不重新加载 - 仅热更新
+    alert("配置已保存，即时生效！");
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
+      <div className="bg-white dark:bg-stone-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-stone-200 dark:border-stone-700 flex flex-col max-h-[90vh] transition-colors" onClick={e => e.stopPropagation()}>
+        <div className="p-5 border-b border-stone-200 dark:border-stone-800 flex justify-between items-center bg-stone-50 dark:bg-stone-950">
+          <div className="flex gap-4">
+            <button
+              onClick={() => setActiveTab('connection')}
+              className={`text-sm font-bold flex items-center gap-2 ${activeTab === 'connection' ? 'text-stone-800 dark:text-stone-200 border-b-2 border-orange-500' : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-300'}`}
+            >
+              <Icons.Settings size={16} />
+              Connection
+            </button>
+            <button
+              onClick={() => setActiveTab('models')}
+              className={`text-sm font-bold flex items-center gap-2 ${activeTab === 'models' ? 'text-stone-800 dark:text-stone-200 border-b-2 border-orange-500' : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-300'}`}
+            >
+              <Icons.Cpu size={16} />
+              Models
+            </button>
+          </div>
+          <button onClick={onClose} className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 transition-colors">
+            <Icons.X size={20} />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-5 overflow-y-auto flex-1">
+          {activeTab === 'connection' && (
+            <>
+              {/* API 模式选择器 */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-stone-500 uppercase tracking-widest">API 模式</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setApiMode('official');
+                      // 如果切换，加载特定默认值
+                      setReasoningModel('gemini-3-flash-preview');
+                      setFastModel('gemini-3-flash-preview');
+                      setImageModel('gemini-2.5-flash-image');
+                    }}
+                    className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all ${apiMode === 'official'
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
+                      }`}
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <Icons.Globe size={16} />
+                      <span>官方 API</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setApiMode('custom');
+                      setReasoningModel('gemini-3-pro-high');
+                      setFastModel('gemini-3-flash');
+                      setImageModel('gemini-3-pro-image');
+                    }}
+                    className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all ${apiMode === 'custom'
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
+                      }`}
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <Icons.Server size={16} />
+                      <span>自定义端点</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* 自定义端点 (仅在自定义模式下显示) */}
+              {apiMode === 'custom' && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-stone-500 uppercase tracking-widest">Target Endpoint</label>
+                  <div className="relative">
+                    <Icons.Link size={14} className="absolute left-3 top-3 text-stone-500" />
+                    <input
+                      type="text"
+                      value={baseUrl}
+                      onChange={e => setBaseUrl(e.target.value)}
+                      placeholder="http://127.0.0.1:8045"
+                      className="w-full pl-9 pr-4 py-2.5 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-sm font-mono text-stone-800 dark:text-stone-200 focus:border-orange-500 outline-none transition-all placeholder:text-stone-400 dark:placeholder:text-stone-600"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* API Key */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-500 uppercase tracking-widest">
+                  {apiMode === 'official' ? 'Google AI API Key' : 'Access Key'}
+                </label>
+                <div className="relative">
+                  <Icons.Key size={14} className="absolute left-3 top-3 text-stone-500" />
+                  <input
+                    type="password"
+                    value={currentKey}
+                    onChange={e => setApiKey(e.target.value)}
+                    placeholder={apiMode === 'official' ? 'AIza...' : 'sk-...'}
+                    className="w-full pl-9 pr-4 py-2.5 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-sm font-mono text-stone-800 dark:text-stone-200 focus:border-orange-500 outline-none transition-all placeholder:text-stone-400 dark:placeholder:text-stone-600"
+                  />
+                </div>
+                {apiMode === 'official' && (
+                  <p className="text-[10px] text-stone-500 mt-1">
+                    从 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline">Google AI Studio</a> 获取 API Key
+                  </p>
+                )}
+              </div>
+            </>
+          )}
+
+          {activeTab === 'models' && (
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-500 uppercase tracking-widest">Reasoning Model</label>
+                <p className="text-[10px] text-stone-600">Used for deep analysis (Agents, Architect, Auditor)</p>
+                <input
+                  type="text"
+                  value={reasoningModel}
+                  onChange={e => setReasoningModel(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-sm font-mono text-stone-800 dark:text-stone-200 focus:border-orange-500 outline-none transition-all"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-500 uppercase tracking-widest">Fast Model</label>
+                <p className="text-[10px] text-stone-600">Used for translation & UI layout detection</p>
+                <input
+                  type="text"
+                  value={fastModel}
+                  onChange={e => setFastModel(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-sm font-mono text-stone-800 dark:text-stone-200 focus:border-orange-500 outline-none transition-all"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-stone-500 uppercase tracking-widest">Image Model</label>
+                <p className="text-[10px] text-stone-600">Used for visual generation</p>
+                <input
+                  type="text"
+                  value={imageModel}
+                  onChange={e => setImageModel(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-sm font-mono text-stone-800 dark:text-stone-200 focus:border-orange-500 outline-none transition-all"
+                />
+              </div>
+            </div>
+          )}
+
+          {status !== 'idle' && (
+            <div className={`text-xs px-3 py-2 rounded-lg flex items-center gap-2 ${status === 'success' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400'}`}>
+              {status === 'success' ? <Icons.CheckCircle2 size={12} /> : <Icons.AlertCircle size={12} />}
+              {statusMsg}
+            </div>
+          )}
+
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              onClick={handleTestConnection}
+              disabled={isTestLoading}
+              className="flex-1 py-2.5 border border-stone-300 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 dark:text-stone-400 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2"
+            >
+              {isTestLoading ? <Icons.RefreshCw size={14} className="animate-spin" /> : <Icons.Activity size={14} />}
+              Test Connection
+            </button>
+            <button
+              onClick={handleSave}
+              className="flex-1 py-2.5 bg-orange-600 text-white hover:bg-orange-500 rounded-xl font-bold text-xs transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"
+            >
+              <Icons.Save size={14} />
+              Save (保存)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
